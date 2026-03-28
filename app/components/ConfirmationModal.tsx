@@ -15,6 +15,7 @@ interface ConfirmationModalProps {
     color: string;
     date: string;
   };
+  isLoading?: boolean;
 }
 
 export default function ConfirmationModal({
@@ -27,6 +28,7 @@ export default function ConfirmationModal({
   cancelText = "Cancel",
   type = "danger",
   threadDetails,
+  isLoading = false,
 }: ConfirmationModalProps) {
   const getButtonStyles = () => {
     switch (type) {
@@ -94,12 +96,22 @@ export default function ConfirmationModal({
           <button
             type="button"
             onClick={() => {
-              onConfirm();
-              onClose();
+              if (!isLoading) {
+                onConfirm();
+                onClose();
+              }
             }}
-            className={`flex-1 px-4 py-2 text-white rounded-lg transition-colors font-medium ${buttonStyles.confirm}`}
+            disabled={isLoading}
+            className={`flex-1 px-4 py-2 text-white rounded-lg transition-colors font-medium ${buttonStyles.confirm} ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-opacity-90'}`}
           >
-            {confirmText}
+            {isLoading ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Deleting...
+              </div>
+            ) : (
+              confirmText
+            )}
           </button>
         </div>
       </div>

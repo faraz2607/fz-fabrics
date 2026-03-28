@@ -21,6 +21,7 @@ model User {
   sessions Session[]
   resetTokens PasswordResetToken[]
   threads   Thread[]
+  employees Employee[]
 }
 
 model Session {
@@ -58,4 +59,18 @@ model Thread {
 
   @@index([userId])
   @@index([date])
+}
+
+model Employee {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([email])
 }
