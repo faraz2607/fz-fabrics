@@ -1,4 +1,5 @@
 import { prisma } from "./prisma";
+import { cookies } from "next/headers";
 
 export async function createSession(userId: string): Promise<string> {
   const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24); // 24 hours
@@ -52,6 +53,33 @@ export async function destroySession(sessionId: string): Promise<void> {
     });
   } catch (error) {
     console.error("Error destroying session:", error);
+  }
+}
+
+export async function getSessionUser(): Promise<{ id: string; name: string; email: string } | null> {
+  try {
+    const cookieStore = await cookies();
+    const sessionId = cookieStore.get("sessionId")?.value;
+
+    if (!sessionId) {
+      return null;
+    }
+
+    const { valid, userId } = await validateSession(sessionId);
+
+    if (!valid || !userId) {
+      return null;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true },
+    });
+
+    return user;
+  } catch (error) {
+    console.error("Error getting session user:", error);
+    return null;
   }
 }
 

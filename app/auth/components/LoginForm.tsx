@@ -76,8 +76,8 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-6 text-gray-900">Login</h1>
+    <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md border border-gray-200">
+      <h1 className="text-2xl font-bold mb-6 text-black">Login</h1>
 
       {generalError && (
         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -95,7 +95,7 @@ export default function LoginForm() {
             name="email"
             value={formState.email}
             onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 ${
               errors.email ? "border-red-500" : "border-gray-300"
             }`}
             placeholder="you@example.com"
@@ -115,7 +115,7 @@ export default function LoginForm() {
             name="password"
             value={formState.password}
             onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 ${
               errors.password ? "border-red-500" : "border-gray-300"
             }`}
             placeholder="••••••••"
@@ -129,7 +129,7 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 rounded-lg transition-colors"
+          className="w-full bg-blue-700 hover:bg-blue-800 disabled:bg-blue-400 text-white font-medium py-2 rounded-lg transition-colors"
         >
           {isLoading ? "Logging in..." : "Login"}
         </button>
@@ -138,14 +138,14 @@ export default function LoginForm() {
       <div className="mt-6 space-y-2 text-center text-sm">
         <p>
           Don't have an account?{" "}
-          <Link href="/auth/signup" className="text-blue-600 hover:underline">
+          <Link href="/auth/signup" className="text-blue-700 hover:underline">
             Sign up
           </Link>
         </p>
         <p>
           <Link
             href="/auth/forgot-password"
-            className="text-blue-600 hover:underline"
+            className="text-blue-700 hover:underline"
           >
             Forgot password?
           </Link>

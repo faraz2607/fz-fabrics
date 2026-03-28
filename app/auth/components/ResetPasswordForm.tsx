@@ -111,8 +111,8 @@ export default function ResetPasswordForm() {
 
   if (!formState.token) {
     return (
-      <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold mb-4 text-gray-900">
+      <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md border border-gray-200">
+        <h1 className="text-2xl font-bold mb-4 text-black">
           Invalid Link
         </h1>
         <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -120,7 +120,7 @@ export default function ResetPasswordForm() {
         </div>
         <Link
           href="/auth/forgot-password"
-          className="text-blue-600 hover:underline text-sm"
+          className="text-blue-700 hover:underline text-sm"
         >
           Request a new reset link
         </Link>
@@ -130,8 +130,8 @@ export default function ResetPasswordForm() {
 
   if (isSubmitted) {
     return (
-      <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold mb-4 text-gray-900">
+      <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md border border-gray-200">
+        <h1 className="text-2xl font-bold mb-4 text-black">
           Password Reset Successful
         </h1>
         <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
@@ -142,7 +142,7 @@ export default function ResetPasswordForm() {
         </p>
         <Link
           href="/auth/login"
-          className="text-blue-600 hover:underline text-sm font-medium"
+          className="text-blue-700 hover:underline text-sm font-medium"
         >
           Go to login
         </Link>
@@ -151,8 +151,8 @@ export default function ResetPasswordForm() {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-6 text-gray-900">Reset Password</h1>
+    <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md border border-gray-200">
+      <h1 className="text-2xl font-bold mb-6 text-black">Reset Password</h1>
 
       {generalError && (
         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -170,7 +170,7 @@ export default function ResetPasswordForm() {
             name="password"
             value={formState.password}
             onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 ${
               errors.password ? "border-red-500" : "border-gray-300"
             }`}
             placeholder="••••••••"
@@ -231,7 +231,7 @@ export default function ResetPasswordForm() {
             name="confirmPassword"
             value={formState.confirmPassword}
             onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 ${
               errors.confirmPassword ? "border-red-500" : "border-gray-300"
             }`}
             placeholder="••••••••"
@@ -245,7 +245,7 @@ export default function ResetPasswordForm() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 rounded-lg transition-colors"
+          className="w-full bg-blue-700 hover:bg-blue-800 disabled:bg-blue-400 text-white font-medium py-2 rounded-lg transition-colors"
         >
           {isLoading ? "Resetting..." : "Reset Password"}
         </button>

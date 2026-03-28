@@ -97,8 +97,8 @@ export default function SignupForm() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-6 text-gray-900">Sign Up</h1>
+    <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md border border-gray-200">
+      <h1 className="text-2xl font-bold mb-6 text-black">Sign Up</h1>
 
       {generalError && (
         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -116,7 +116,7 @@ export default function SignupForm() {
             name="name"
             value={formState.name}
             onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 ${
               errors.name ? "border-red-500" : "border-gray-300"
             }`}
             placeholder="John Doe"
@@ -136,7 +136,7 @@ export default function SignupForm() {
             name="email"
             value={formState.email}
             onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 ${
               errors.email ? "border-red-500" : "border-gray-300"
             }`}
             placeholder="you@example.com"
@@ -156,7 +156,7 @@ export default function SignupForm() {
             name="password"
             value={formState.password}
             onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 ${
               errors.password ? "border-red-500" : "border-gray-300"
             }`}
             placeholder="••••••••"
@@ -217,7 +217,7 @@ export default function SignupForm() {
             name="confirmPassword"
             value={formState.confirmPassword}
             onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 ${
               errors.confirmPassword ? "border-red-500" : "border-gray-300"
             }`}
             placeholder="••••••••"
@@ -231,7 +231,7 @@ export default function SignupForm() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-medium py-2 rounded-lg transition-colors"
+          className="w-full bg-blue-700 hover:bg-blue-800 disabled:bg-blue-400 text-white font-medium py-2 rounded-lg transition-colors"
         >
           {isLoading ? "Creating account..." : "Sign Up"}
         </button>
@@ -240,7 +240,7 @@ export default function SignupForm() {
       <div className="mt-6 text-center text-sm">
         <p>
           Already have an account?{" "}
-          <Link href="/auth/login" className="text-blue-600 hover:underline">
+          <Link href="/auth/login" className="text-blue-700 hover:underline">
             Login
           </Link>
         </p>
