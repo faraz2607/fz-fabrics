@@ -26,7 +26,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-inter">
         <TabHeader />
-        <div className="flex-1">{children}</div>
+        <div className="flex-1 bg-gray-50">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+            {children}
+          </div>
+        </div>
       </body>
     </html>
   );

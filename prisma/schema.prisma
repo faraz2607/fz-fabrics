@@ -1,3 +1,16 @@
+model Fabric {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  type        String
+  cost        Float
+  count       Int
+  earning     Float
+  employeeId  String   @db.ObjectId
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([employeeId])
+}
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -66,11 +79,36 @@ model Employee {
   name      String
   email     String
   phone     String?
+  donation  Float    @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   userId    String   @db.ObjectId
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fabrics   Fabric[]
+  payments  Payment[]
 
   @@index([userId])
   @@index([email])
+}
+
+model FabricType {
+  id    String  @id @default(auto()) @map("_id") @db.ObjectId
+  type  String  @unique
+  cost  Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Payment {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  employeeId   String   @db.ObjectId
+  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  amount       Float
+  totalEarning Float    @default(0)
+  donation     Float    @default(0)
+  balance      Float    @default(0)
+  note         String?
+  createdAt    DateTime @default(now())
+
+  @@index([employeeId])
 }

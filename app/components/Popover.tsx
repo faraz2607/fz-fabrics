@@ -1,6 +1,7 @@
 "use client";
 
-import { ReactNode, useRef, useEffect } from "react";
+import { ReactNode, useRef, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface PopoverProps {
   isOpen: boolean;
@@ -16,50 +17,58 @@ export default function Popover({
   onClose,
   trigger,
   children,
-  position = "right",
   className = "w-64",
 }: PopoverProps) {
-  const popoverRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState({ top: 0, left: 0 });
 
-  // Close popover when clicking outside
+  // Position the popover relative to the trigger, keeping it inside the viewport
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    if (!isOpen || !triggerRef.current) return;
+    const triggerRect = triggerRef.current.getBoundingClientRect();
+    const popoverWidth = 320; // w-80
+    const gap = 8;
+
+    let left = triggerRect.right - popoverWidth;
+    if (left < gap) left = gap;
+    if (left + popoverWidth > window.innerWidth - gap) {
+      left = window.innerWidth - popoverWidth - gap;
+    }
+
+    setCoords({
+      top: triggerRect.bottom + gap,
+      left,
+    });
+  }, [isOpen]);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!isOpen) return;
+    function handleClick(e: MouseEvent) {
       if (
-        popoverRef.current &&
-        !popoverRef.current.contains(event.target as Node) &&
-        triggerRef.current &&
-        !triggerRef.current.contains(event.target as Node)
+        popoverRef.current && !popoverRef.current.contains(e.target as Node) &&
+        triggerRef.current && !triggerRef.current.contains(e.target as Node)
       ) {
         onClose();
       }
     }
-
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
   }, [isOpen, onClose]);
-
-  const positionClass = {
-    right: "right-0",
-    left: "left-0",
-    center: "left-1/2 -translate-x-1/2",
-  }[position];
 
   return (
     <div className="relative">
       <div ref={triggerRef}>{trigger}</div>
-
-      {isOpen && (
+      {isOpen && typeof window !== "undefined" && createPortal(
         <div
           ref={popoverRef}
-          className={`absolute ${positionClass} mt-2 ${className} bg-white rounded-lg shadow-lg z-100 border border-gray-200 overflow-hidden`}
+          style={{ position: "fixed", top: coords.top, left: coords.left, zIndex: 9999 }}
+          className={`${className} bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden`}
         >
           {children}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, email, phone } = body;
+    const { name, email, phone, donation } = body;
 
     // Validate required fields
     if (!name || !email) {
@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
         name,
         email,
         phone,
+        donation: donation || 0,
         userId
       }
     });

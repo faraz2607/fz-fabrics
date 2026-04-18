@@ -89,18 +89,14 @@ export default function ConfirmationModal({
           <button
             type="button"
             onClick={onClose}
-            className={`flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors font-medium ${buttonStyles.cancel}`}
+            disabled={isLoading}
+            className={`flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors font-medium ${buttonStyles.cancel} ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             {cancelText}
           </button>
           <button
             type="button"
-            onClick={() => {
-              if (!isLoading) {
-                onConfirm();
-                onClose();
-              }
-            }}
+            onClick={onConfirm}
             disabled={isLoading}
             className={`flex-1 px-4 py-2 text-white rounded-lg transition-colors font-medium ${buttonStyles.confirm} ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-opacity-90'}`}
           >

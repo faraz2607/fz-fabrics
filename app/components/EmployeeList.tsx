@@ -4,13 +4,21 @@ import { useState, useEffect } from 'react';
 import EmployeeForm from './EmployeeForm';
 import ConfirmationModal from './ConfirmationModal';
 import Modal from './Modal';
-import Link from 'next/link';
+import TableSkeleton from './TableSkeleton';
+import NoDataFound from './NoDataFound';
+import { useRef } from 'react';
+interface FabricType {
+  id?: string;
+  type: string;
+  cost: number;
+}
 
 interface Employee {
   id: string;
   name: string;
   email: string;
   phone?: string;
+  donation?: number;
   createdAt: string;
 }
 
@@ -22,6 +30,58 @@ export default function EmployeeList() {
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Fabric type popup state
+  const [showFabricTypeModal, setShowFabricTypeModal] = useState(false);
+  const [fabricTypes, setFabricTypes] = useState<FabricType[]>([]);
+  const [fabricTypeError, setFabricTypeError] = useState<string | null>(null);
+  const fabricTypeRef = useRef<HTMLInputElement>(null);
+  const fabricCostRef = useRef<HTMLInputElement>(null);
+  // Fetch fabric types from API (to be implemented)
+  const fetchFabricTypes = async () => {
+    try {
+      const res = await fetch('/api/fabrics');
+      if (res.ok) {
+        setFabricTypes(await res.json());
+      }
+    } catch {}
+  };
+
+  useEffect(() => { fetchFabricTypes(); }, []);
+  // Add fabric type handler
+  const handleAddFabricType = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFabricTypeError(null);
+    const type = fabricTypeRef.current?.value.trim() || '';
+    const costRaw = fabricCostRef.current?.value;
+    const cost = costRaw !== undefined && costRaw !== null && costRaw !== '' ? parseFloat(costRaw) : NaN;
+    if (!type || isNaN(cost) || cost <= 0) {
+      setFabricTypeError('Type and cost are required and cost must be a positive number.');
+      return;
+    }
+    if (fabricTypes.some(f => f.type.toLowerCase() === type.toLowerCase())) {
+      setFabricTypeError('This fabric type already exists.');
+      return;
+    }
+    // Save to DB (API call)
+    try {
+      const res = await fetch('/api/fabrics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, cost })
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setFabricTypeError(data.error || 'Failed to add fabric type.');
+        return;
+      }
+      setShowFabricTypeModal(false);
+      if (fabricTypeRef.current) fabricTypeRef.current.value = '';
+      if (fabricCostRef.current) fabricCostRef.current.value = '';
+      fetchFabricTypes();
+    } catch {
+      setFabricTypeError('Failed to add fabric type.');
+    }
+  };
 
   const fetchEmployees = async () => {
     setLoading(true);
@@ -71,7 +131,6 @@ export default function EmployeeList() {
 
       if (response.ok) {
         setEmployees(prev => prev.filter(emp => emp.id !== deletingEmployee.id));
-        setDeletingEmployee(null);
       } else {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to delete employee');
@@ -80,6 +139,7 @@ export default function EmployeeList() {
       setError('An error occurred while deleting the employee');
     } finally {
       setIsSubmitting(false);
+      setDeletingEmployee(null);
     }
   };
 
@@ -97,44 +157,45 @@ export default function EmployeeList() {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white py-12">
-        <div className="mx-auto max-w-7xl bg-white p-8 shadow rounded-lg border border-gray-200">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-black">Employees</h1>
-          <button
-            onClick={handleAddEmployee}
-            className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            Add Employee
-          </button>
-          </div>
-          <div className="animate-pulse">
-            <div className="h-4 bg-gray-300 rounded w-1/4 mb-4"></div>
-            <div className="space-y-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-16 bg-gray-200 rounded"></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
-    <main className="min-h-screen bg-white py-12">
-      <div className="mx-auto max-w-7xl bg-white p-8 shadow rounded-lg border border-gray-200">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-black">Employees</h1>
-          <button
-            onClick={handleAddEmployee}
-            className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            Add Employee
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => window.location.assign('/fabrics')}
+              className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+            >
+              Manage Fabrics
+            </button>
+            <button
+              onClick={handleAddEmployee}
+              className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              Add Employee
+            </button>
+          </div>
         </div>
+        {/* Add Fabric Type Modal */}
+        <Modal isOpen={showFabricTypeModal} onClose={() => setShowFabricTypeModal(false)} title="Add Fabric Type">
+          <form onSubmit={handleAddFabricType} className="space-y-5">
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Fabric Type</label>
+              <input ref={fabricTypeRef} type="text" placeholder="e.g. Cotton" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition" required />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Cost (₹)</label>
+              <input ref={fabricCostRef} type="number" min={1} placeholder="Enter cost" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition" required />
+            </div>
+            {fabricTypeError && <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2">{fabricTypeError}</div>}
+            <div className="flex gap-3 pt-1">
+              <button type="button" onClick={() => setShowFabricTypeModal(false)} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition">Cancel</button>
+              <button type="submit" className="flex-1 px-4 py-2.5 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-sm transition">Add Fabric Type</button>
+            </div>
+          </form>
+        </Modal>
 
         {error && (
           <div className="mb-4 rounded-md bg-red-50 p-4">
@@ -142,78 +203,51 @@ export default function EmployeeList() {
           </div>
         )}
 
-        {employees.length === 0 ? (
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No employees yet</h3>
-            <p className="text-gray-600 mb-6">Get started by adding your first employee.</p>
-            <button
-              onClick={handleAddEmployee}
-              className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              Add Your First Employee
-            </button>
+        {loading ? (
+          <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+            <TableSkeleton rows={5} cols={5} />
           </div>
+        ) : employees.length === 0 ? (
+          <NoDataFound
+            title="No employees yet"
+            description="Get started by adding your first employee."
+            action={{ label: 'Add Employee', onClick: handleAddEmployee }}
+          />
         ) : (
-          <div className="overflow-hidden border border-gray-200 rounded-lg">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Phone
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Joined
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {employees.map((employee) => (
-                  <tr key={employee.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{employee.name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{employee.email}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">{employee.phone || '-'}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {formatDate(employee.createdAt)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                      <Link 
-                        href={`/employee/${employee.id}`}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        View Details
-                      </Link>
-                      <button
-                        onClick={() => handleEditEmployee(employee)}
-                        className="text-indigo-600 hover:text-indigo-900"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteEmployee(employee)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
-                    </td>
+          <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+            <div className="overflow-x-auto overflow-y-auto max-h-123">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-linear-to-r from-blue-50 to-gray-50 sticky top-0 z-10">
+                  <tr>
+                    <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Phone</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Donation</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Joined</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-100">
+                  {employees.map((employee, idx) => (
+                    <tr
+                      key={employee.id}
+                      className={`cursor-pointer transition-colors hover:bg-blue-50 ${idx % 2 === 1 ? 'bg-gray-50/60' : 'bg-white'}`}
+                      onClick={() => window.location.assign(`/employee/${employee.id}`)}
+                    >
+                      <td className="px-5 py-3 whitespace-nowrap text-sm font-semibold text-gray-900">{employee.name}</td>
+                      <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-500">{employee.email}</td>
+                      <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-500">{employee.phone || '—'}</td>
+                      <td className="px-5 py-3 whitespace-nowrap text-sm font-medium text-green-600">₹{employee.donation?.toFixed(2) || '0.00'}</td>
+                      <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-500">{formatDate(employee.createdAt)}</td>
+                      <td className="px-5 py-3 whitespace-nowrap text-sm font-medium space-x-3" onClick={(e) => e.stopPropagation()}>
+                        <button onClick={() => handleEditEmployee(employee)} className="text-indigo-600 hover:text-indigo-900 font-medium">Edit</button>
+                        <button onClick={() => handleDeleteEmployee(employee)} className="text-red-500 hover:text-red-700 font-medium">Delete</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
@@ -250,7 +284,6 @@ export default function EmployeeList() {
           type="danger"
           isLoading={isSubmitting}
         />
-      </div>
-    </main>
+    </div>
   );
 }

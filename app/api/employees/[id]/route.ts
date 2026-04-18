@@ -60,7 +60,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, email, phone } = body;
+    const { name, email, phone, donation } = body;
 
     // Validate required fields
     if (!name || !email) {
@@ -103,7 +103,8 @@ export async function PUT(
       data: {
         name,
         email,
-        phone
+        phone,
+        donation: donation !== undefined ? donation : existingEmployee.donation
       }
     });
 

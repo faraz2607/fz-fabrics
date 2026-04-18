@@ -60,9 +60,9 @@ export default function Dropdown({
   };
 
   return (
-    <div className="flex flex-col gap-2 w-full">
+    <div className="flex flex-col gap-2">
       {label && (
-        <label className="block text-sm font-semibold text-gray-700">
+        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">
           {label}
         </label>
       )}
@@ -72,11 +72,11 @@ export default function Dropdown({
           ref={buttonRef}
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
-          className={`w-full px-4 py-2.5 rounded-lg border-2 border-gray-300 bg-white text-gray-900 font-medium transition-all flex items-center justify-between ${
+          className={`w-full px-4 py-2.5 rounded-xl border bg-gray-50 text-gray-900 text-sm font-medium transition-all flex items-center justify-between ${
             isOpen
-              ? "border-blue-500 shadow-lg shadow-blue-100 ring-2 ring-blue-200"
-              : "hover:border-blue-400 hover:shadow-md"
-          } ${disabled ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "cursor-pointer"} ${className}`}
+              ? "border-indigo-400 ring-2 ring-indigo-200"
+              : "border-gray-200 hover:border-indigo-300"
+          } ${disabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer"} ${className}`}
         >
           <span>{displayLabel}</span>
           <svg
