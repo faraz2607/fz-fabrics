@@ -72,7 +72,7 @@ export default function AddThreadModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Add New Thread">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3">
         {/* Thread Type Selection */}
         <Dropdown
           value={threadType}
@@ -96,17 +96,17 @@ export default function AddThreadModal({
         />
 
         {/* Color Preview */}
-        <div className="flex items-center gap-2 px-4 py-3 bg-gray-100 rounded-lg">
+        <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
           <div
-            className="w-6 h-6 rounded-full border-2 border-gray-300"
+            className="w-5 h-5 rounded-full border-2 border-gray-300"
             style={{ backgroundColor: COLOR_MAP[color] || "#000" }}
           ></div>
-          <span className="text-sm text-gray-700">Color Preview</span>
+          <span className="text-xs text-gray-700">Color Preview</span>
         </div>
 
         {/* Cost Input */}
         <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
             Cost (₹)
           </label>
           <input
@@ -119,7 +119,7 @@ export default function AddThreadModal({
               if (error) setError("");
             }}
             placeholder="Enter cost amount"
-            className={`w-full px-4 py-2.5 rounded-xl border bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition ${
+            className={`w-full px-3 py-1.5 rounded-lg border bg-gray-50 text-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition ${
               error ? "border-red-400 bg-red-50" : "border-gray-200"
             }`}
           />
@@ -128,30 +128,30 @@ export default function AddThreadModal({
 
         {/* Date Input */}
         <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
             Date
           </label>
           <input
             type="date"
             value={date}
             onChange={(e) => { setDate(e.target.value); setError(""); }}
-            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition cursor-pointer"
+            className="w-full px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition cursor-pointer"
             onClick={(e) => e.currentTarget.showPicker && e.currentTarget.showPicker()}
           />
         </div>
 
         {/* Buttons */}
-        <div className="flex gap-3 pt-1">
+        <div className="flex gap-2 pt-1">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition"
+            className="flex-1 px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 text-xs font-semibold hover:bg-gray-50 transition"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-sm transition"
+            className="flex-1 px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-sm transition"
           >
             Add Thread
           </button>

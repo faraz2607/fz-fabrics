@@ -31,7 +31,8 @@ export default function FabricListPage() {
     try {
       const res = await fetch("/api/fabrics");
       if (!res.ok) throw new Error("Failed to fetch fabrics");
-      setFabrics(await res.json());
+      const data = await res.json();
+      setFabrics(data.sort((a: FabricType, b: FabricType) => (b.id || '').localeCompare(a.id || '')));
     } catch {
       setError("Failed to fetch fabrics");
     } finally {
@@ -113,10 +114,10 @@ export default function FabricListPage() {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-      <div className="flex justify-between items-center mb-6">
+    <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 p-3 sm:p-6">
+      <div className="flex flex-wrap justify-between items-center gap-3 mb-4 sm:mb-6">
         <div
-          className="flex items-center gap-2 cursor-pointer group"
+          className="flex items-center gap-1.5 sm:gap-2 cursor-pointer group"
           onClick={() => router.push("/employee")}
         >
           <svg
@@ -125,7 +126,7 @@ export default function FabricListPage() {
             viewBox="0 0 24 24"
             strokeWidth={2}
             stroke="currentColor"
-            className="w-7 h-7 text-blue-600 group-hover:text-blue-800 transition-colors"
+            className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-blue-600 group-hover:text-blue-800 transition-colors"
           >
             <path
               strokeLinecap="round"
@@ -133,23 +134,23 @@ export default function FabricListPage() {
               d="M15.75 19.5L8.25 12l7.5-7.5"
             />
           </svg>
-          <h1 className="text-2xl font-bold text-gray-900 group-hover:text-blue-800 transition-colors">
+          <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 group-hover:text-blue-800 transition-colors">
             Manage Fabrics
           </h1>
         </div>
         <button
-          className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
+          className="inline-flex items-center rounded-lg bg-blue-600 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
           onClick={handleOpenAdd}
         >
           Add Fabric
         </button>
       </div>
       {error && (
-        <div className="mb-4 text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+        <div className="mb-3 sm:mb-4 text-red-600 text-xs sm:text-sm bg-red-50 border border-red-200 rounded-lg px-2 py-1.5 sm:px-3 sm:py-2">
           {error}
         </div>
       )}
-      <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+      <div className="overflow-x-auto rounded-lg sm:rounded-xl border border-gray-200 shadow-sm">
         {loading ? (
           <TableSkeleton rows={4} cols={3} />
         ) : fabrics.length === 0 ? (
@@ -163,13 +164,13 @@ export default function FabricListPage() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead>
                 <tr className="bg-linear-to-r from-blue-50 to-gray-50">
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-2 sm:px-4 sm:py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Type
                   </th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-2 sm:px-4 sm:py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Cost (₹)
                   </th>
-                  <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-3 py-2 sm:px-4 sm:py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -180,13 +181,13 @@ export default function FabricListPage() {
                     key={fabric.id}
                     className={`transition-colors hover:bg-blue-50 ${idx % 2 === 1 ? "bg-gray-50/60" : "bg-white"}`}
                   >
-                    <td className="px-5 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">
                       {fabric.type}
                     </td>
-                    <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-700">
+                    <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-700">
                       ₹{fabric.cost}
                     </td>
-                    <td className="px-5 py-3 whitespace-nowrap text-sm font-medium space-x-3">
+                    <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm font-medium space-x-2 sm:space-x-3">
                       <button
                         className="text-indigo-600 hover:text-indigo-900 font-medium"
                         onClick={() => handleEdit(fabric)}
@@ -223,9 +224,9 @@ export default function FabricListPage() {
         onClose={() => setShowAddModal(false)}
         title={editFabric ? "Edit Fabric" : "Add Fabric"}
       >
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
               Fabric Type
             </label>
             <input
@@ -240,13 +241,13 @@ export default function FabricListPage() {
                 }))
               }
               placeholder="e.g. Cotton"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition disabled:opacity-60 disabled:cursor-not-allowed"
+              className="w-full px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition disabled:opacity-60 disabled:cursor-not-allowed"
               required
               disabled={!!editFabric}
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
               Cost (₹)
             </label>
             <input
@@ -255,27 +256,27 @@ export default function FabricListPage() {
               value={form.cost}
               onChange={(e) => setForm((f) => ({ ...f, cost: e.target.value }))}
               placeholder="Enter cost"
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition"
+              className="w-full px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition"
               min={0.01}
               required
             />
           </div>
           {formError && (
-            <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            <div className="flex items-center gap-2 text-red-600 text-xs sm:text-sm bg-red-50 border border-red-200 rounded-lg px-2 py-1.5 sm:px-3 sm:py-2">
               {formError}
             </div>
           )}
-          <div className="flex gap-3 pt-1">
+          <div className="flex gap-2 sm:gap-3 pt-1">
             <button
               type="button"
               onClick={() => setShowAddModal(false)}
-              className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition"
+              className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-gray-200 text-gray-600 text-xs sm:text-sm font-semibold hover:bg-gray-50 transition"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-4 py-2.5 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-sm transition"
+              className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg bg-linear-to-r from-blue-600 to-indigo-600 text-white text-xs sm:text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-sm transition"
             >
               {editFabric ? "Update" : "Add"} Fabric
             </button>

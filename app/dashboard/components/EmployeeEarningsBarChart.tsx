@@ -38,7 +38,7 @@ export default function EmployeeEarningsBarChart({ data }: { data: EmployeeEarni
   }
 
   const chartData = {
-    labels: sorted.map((e) => e.employeeName),
+    labels: sorted.map((e) => e.employeeName.split(' ')[0]),
     datasets: [
       {
         label: "Earning (₹)",
@@ -97,7 +97,12 @@ export default function EmployeeEarningsBarChart({ data }: { data: EmployeeEarni
     scales: {
       x: {
         grid: { display: false },
-        ticks: { font: { size: 12, weight: "bold" }, color: "#374151" },
+        ticks: { 
+          font: { size: 12, weight: "bold" }, 
+          color: "#374151",
+          maxRotation: 90,
+          autoSkip: false
+        },
         border: { display: false },
       },
       yEarning: {

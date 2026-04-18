@@ -60,7 +60,7 @@ export default function Dropdown({
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5 sm:gap-2">
       {label && (
         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">
           {label}
@@ -72,7 +72,7 @@ export default function Dropdown({
           ref={buttonRef}
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
-          className={`w-full px-4 py-2.5 rounded-xl border bg-gray-50 text-gray-900 text-sm font-medium transition-all flex items-center justify-between ${
+          className={`w-full px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg border bg-gray-50 text-gray-900 text-xs sm:text-sm font-medium transition-all flex items-center justify-between ${
             isOpen
               ? "border-indigo-400 ring-2 ring-indigo-200"
               : "border-gray-200 hover:border-indigo-300"
@@ -80,7 +80,7 @@ export default function Dropdown({
         >
           <span>{displayLabel}</span>
           <svg
-            className={`w-5 h-5 text-gray-600 transition-transform duration-200 ${
+            className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-600 transition-transform duration-200 ${
               isOpen ? "rotate-180" : ""
             }`}
             fill="none"
@@ -97,13 +97,13 @@ export default function Dropdown({
         </button>
 
         {isOpen && !disabled && (
-          <div className={`absolute top-full left-0 mt-2 ${minWidth} bg-white border-2 border-gray-300 rounded-lg shadow-xl z-[60] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150`}>
+          <div className={`absolute top-full left-0 mt-1.5 sm:mt-2 ${minWidth} bg-white border-2 border-gray-300 rounded-lg shadow-xl z-[60] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150`}>
             <div className="max-h-64 overflow-y-auto">
               {options.map((option, index) => (
                 <button
                   key={option.value}
                   onClick={() => handleSelect(option.value)}
-                  className={`w-full px-4 py-2.5 text-left font-medium transition-colors ${
+                  className={`w-full px-3 py-2 sm:px-4 sm:py-2.5 text-left text-xs sm:text-sm font-medium transition-colors ${
                     option.value === value
                       ? "bg-blue-500 text-white shadow-sm"
                       : "text-gray-700 hover:bg-blue-50 hover:text-blue-700"
@@ -113,7 +113,7 @@ export default function Dropdown({
                     <span>{option.label}</span>
                     {option.value === value && (
                       <svg
-                        className="w-5 h-5"
+                        className="w-4 h-4 sm:w-5 sm:h-5"
                         fill="currentColor"
                         viewBox="0 0 24 24"
                       >

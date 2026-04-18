@@ -95,7 +95,7 @@ export default function EmployeeList() {
       }
       
       const data = await response.json();
-      setEmployees(data);
+      setEmployees(data.sort((a: Employee, b: Employee) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -160,19 +160,19 @@ export default function EmployeeList() {
 
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-black">Employees</h1>
-          <div className="flex gap-2">
+    <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 p-3 sm:p-6">
+        <div className="flex flex-wrap justify-between items-center gap-3 mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-black">Employees</h1>
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={() => window.location.assign('/fabrics')}
-              className="inline-flex items-center rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              className="inline-flex items-center rounded-lg bg-green-600 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
             >
               Manage Fabrics
             </button>
             <button
               onClick={handleAddEmployee}
-              className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="inline-flex items-center rounded-lg bg-blue-600 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               Add Employee
             </button>
@@ -180,31 +180,31 @@ export default function EmployeeList() {
         </div>
         {/* Add Fabric Type Modal */}
         <Modal isOpen={showFabricTypeModal} onClose={() => setShowFabricTypeModal(false)} title="Add Fabric Type">
-          <form onSubmit={handleAddFabricType} className="space-y-5">
+          <form onSubmit={handleAddFabricType} className="space-y-3 sm:space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Fabric Type</label>
-              <input ref={fabricTypeRef} type="text" placeholder="e.g. Cotton" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition" required />
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Fabric Type</label>
+              <input ref={fabricTypeRef} type="text" placeholder="e.g. Cotton" className="w-full px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition" required />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Cost (₹)</label>
-              <input ref={fabricCostRef} type="number" min={1} placeholder="Enter cost" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition" required />
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Cost (₹)</label>
+              <input ref={fabricCostRef} type="number" min={1} placeholder="Enter cost" className="w-full px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition" required />
             </div>
-            {fabricTypeError && <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2">{fabricTypeError}</div>}
-            <div className="flex gap-3 pt-1">
-              <button type="button" onClick={() => setShowFabricTypeModal(false)} className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm font-semibold hover:bg-gray-50 transition">Cancel</button>
-              <button type="submit" className="flex-1 px-4 py-2.5 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-sm transition">Add Fabric Type</button>
+            {fabricTypeError && <div className="flex items-center gap-2 text-red-600 text-xs bg-red-50 border border-red-200 rounded-lg px-2 py-1.5 sm:px-3 sm:py-2">{fabricTypeError}</div>}
+            <div className="flex gap-2 sm:gap-3 pt-1">
+              <button type="button" onClick={() => setShowFabricTypeModal(false)} className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-gray-200 text-gray-600 text-xs sm:text-sm font-semibold hover:bg-gray-50 transition">Cancel</button>
+              <button type="submit" className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg bg-linear-to-r from-blue-600 to-indigo-600 text-white text-xs sm:text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-sm transition">Add Fabric Type</button>
             </div>
           </form>
         </Modal>
 
         {error && (
-          <div className="mb-4 rounded-md bg-red-50 p-4">
-            <div className="text-sm text-red-700">{error}</div>
+          <div className="mb-3 sm:mb-4 rounded-lg bg-red-50 p-3">
+            <div className="text-xs sm:text-sm text-red-700">{error}</div>
           </div>
         )}
 
         {loading ? (
-          <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+          <div className="overflow-hidden rounded-lg sm:rounded-xl border border-gray-200 shadow-sm">
             <TableSkeleton rows={5} cols={5} />
           </div>
         ) : employees.length === 0 ? (
@@ -214,17 +214,17 @@ export default function EmployeeList() {
             action={{ label: 'Add Employee', onClick: handleAddEmployee }}
           />
         ) : (
-          <div className="overflow-hidden rounded-xl border border-gray-200 shadow-sm">
+          <div className="overflow-hidden rounded-lg sm:rounded-xl border border-gray-200 shadow-sm">
             <div className="overflow-x-auto overflow-y-auto max-h-123">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-linear-to-r from-blue-50 to-gray-50 sticky top-0 z-10">
                   <tr>
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Phone</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Donation</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Joined</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                    <th className="px-3 py-2 sm:px-4 sm:py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
+                    <th className="px-3 py-2 sm:px-4 sm:py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
+                    <th className="px-3 py-2 sm:px-4 sm:py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Phone</th>
+                    <th className="px-3 py-2 sm:px-4 sm:py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Donation</th>
+                    <th className="px-3 py-2 sm:px-4 sm:py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Joined</th>
+                    <th className="px-3 py-2 sm:px-4 sm:py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
@@ -234,12 +234,12 @@ export default function EmployeeList() {
                       className={`cursor-pointer transition-colors hover:bg-blue-50 ${idx % 2 === 1 ? 'bg-gray-50/60' : 'bg-white'}`}
                       onClick={() => window.location.assign(`/employee/${employee.id}`)}
                     >
-                      <td className="px-5 py-3 whitespace-nowrap text-sm font-semibold text-gray-900">{employee.name}</td>
-                      <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-500">{employee.email}</td>
-                      <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-500">{employee.phone || '—'}</td>
-                      <td className="px-5 py-3 whitespace-nowrap text-sm font-medium text-green-600">₹{employee.donation?.toFixed(2) || '0.00'}</td>
-                      <td className="px-5 py-3 whitespace-nowrap text-sm text-gray-500">{formatDate(employee.createdAt)}</td>
-                      <td className="px-5 py-3 whitespace-nowrap text-sm font-medium space-x-3" onClick={(e) => e.stopPropagation()}>
+                      <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm font-semibold text-gray-900">{employee.name}</td>
+                      <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500">{employee.email}</td>
+                      <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500">{employee.phone || '—'}</td>
+                      <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm font-medium text-green-600">₹{employee.donation?.toFixed(2) || '0.00'}</td>
+                      <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500">{formatDate(employee.createdAt)}</td>
+                      <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm font-medium space-x-2 sm:space-x-3" onClick={(e) => e.stopPropagation()}>
                         <button onClick={() => handleEditEmployee(employee)} className="text-indigo-600 hover:text-indigo-900 font-medium">Edit</button>
                         <button onClick={() => handleDeleteEmployee(employee)} className="text-red-500 hover:text-red-700 font-medium">Delete</button>
                       </td>
