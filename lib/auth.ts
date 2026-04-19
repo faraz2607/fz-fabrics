@@ -262,6 +262,79 @@ export async function resetPassword(
   }
 }
 
+export async function changePassword(
+  userId: string,
+  currentPassword: string,
+  newPassword: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // Input validation
+    if (!userId || typeof userId !== 'string') {
+      return { success: false, error: "Invalid user ID" };
+    }
+
+    if (!currentPassword || typeof currentPassword !== 'string') {
+      return { success: false, error: "Current password is required" };
+    }
+
+    if (!newPassword || typeof newPassword !== 'string') {
+      return { success: false, error: "New password is required" };
+    }
+
+    // Prevent same password
+    if (currentPassword === newPassword) {
+      return { success: false, error: "New password must be different from current password" };
+    }
+
+    // Find user
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      return { success: false, error: "User not found" };
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await verifyPassword(
+      currentPassword,
+      user.passwordHash
+    );
+
+    if (!isCurrentPasswordValid) {
+      return { success: false, error: "Current password is incorrect" };
+    }
+
+    // Hash new password
+    const newPasswordHash = await hashPassword(newPassword);
+
+    // Update password in database
+    await prisma.user.update({
+      where: { id: userId },
+      data: { 
+        passwordHash: newPasswordHash,
+        updatedAt: new Date()
+      },
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error changing password:", error);
+    
+    // Handle specific database errors
+    if (error instanceof Error) {
+      if (error.message.includes('User not found')) {
+        return { success: false, error: "User not found" };
+      }
+      if (error.message.includes('connection')) {
+        return { success: false, error: "Database connection error" };
+      }
+    }
+    
+    return { success: false, error: "Failed to change password" };
+  }
+}
+
 // Simulate sending email (in production, use a service like SendGrid, AWS SES, etc.)
 export async function sendPasswordResetEmail(
   email: string,

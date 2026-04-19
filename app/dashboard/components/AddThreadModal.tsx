@@ -3,12 +3,19 @@
 import { useState, useEffect } from "react";
 import Modal from "@/app/components/Modal";
 import Dropdown from "@/app/components/Dropdown";
-import { Thread } from "../page";
 import {
   DEFAULT_THREAD_TYPES,
   AVAILABLE_COLORS,
   COLOR_MAP,
 } from "../constants";
+
+interface Thread {
+  id: string;
+  type: string;
+  color: string;
+  cost: number;
+  date: string;
+}
 
 interface AddThreadModalProps {
   isOpen: boolean;
@@ -151,7 +158,7 @@ export default function AddThreadModal({
           </button>
           <button
             type="submit"
-            className="flex-1 px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-sm transition"
+            className="flex-1 px-3 py-1.5 rounded-lg bg-linear-to-r from-blue-600 to-indigo-600 text-white text-xs font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-sm transition"
           >
             Add Thread
           </button>

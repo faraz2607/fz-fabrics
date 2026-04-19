@@ -11,8 +11,15 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { Thread } from "../page";
 import { COLOR_MAP } from "../constants";
+
+interface Thread {
+  id: string;
+  type: string;
+  color: string;
+  cost: number;
+  date: string;
+}
 
 ChartJS.register(
   CategoryScale,

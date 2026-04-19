@@ -13,6 +13,7 @@ export const metadata: Metadata = {
 };
 
 import TabHeader from "./components/TabHeader";
+import LayoutWrapper from "./components/LayoutWrapper";
 
 export default function RootLayout({
   children,
@@ -26,11 +27,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-inter">
         <TabHeader />
-        <div className="flex-1 bg-gray-50">
-          <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
-            {children}
-          </div>
-        </div>
+        <LayoutWrapper>{children}</LayoutWrapper>
       </body>
     </html>
   );

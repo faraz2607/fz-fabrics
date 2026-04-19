@@ -115,3 +115,115 @@ export function validateSignupForm(
 
   return errors;
 }
+
+export function validateChangePassword(
+  currentPassword: string,
+  newPassword: string,
+  confirmPassword: string
+) {
+  const errors: ValidationError[] = [];
+
+  // Validate input types
+  if (typeof currentPassword !== 'string' || typeof newPassword !== 'string' || typeof confirmPassword !== 'string') {
+    errors.push({
+      field: "general",
+      message: "All password fields must be valid strings",
+    });
+    return errors;
+  }
+
+  // Current password validation
+  if (!currentPassword || currentPassword.trim() === "") {
+    errors.push({
+      field: "currentPassword",
+      message: "Current password is required",
+    });
+  } else if (currentPassword.length > 128) {
+    errors.push({
+      field: "currentPassword",
+      message: "Current password is too long",
+    });
+  }
+
+  // New password validation
+  if (!newPassword || newPassword.trim() === "") {
+    errors.push({
+      field: "newPassword",
+      message: "New password is required",
+    });
+  } else {
+    // Check for spaces
+    if (newPassword.includes(' ')) {
+      errors.push({
+        field: "newPassword",
+        message: "Password cannot contain spaces",
+      });
+    }
+    
+    // Length validation
+    if (newPassword.length < PASSWORD_MIN_LENGTH) {
+      errors.push({
+        field: "newPassword",
+        message: `Password must be at least ${PASSWORD_MIN_LENGTH} characters long`,
+      });
+    }
+    
+    if (newPassword.length > 128) {
+      errors.push({
+        field: "newPassword",
+        message: "Password must be less than 128 characters",
+      });
+    }
+
+    // Character requirements
+    if (PASSWORD_REQUIRES_UPPERCASE && !/[A-Z]/.test(newPassword)) {
+      errors.push({
+        field: "newPassword",
+        message: "Password must contain at least one uppercase letter",
+      });
+    }
+
+    if (PASSWORD_REQUIRES_NUMBER && !/[0-9]/.test(newPassword)) {
+      errors.push({
+        field: "newPassword",
+        message: "Password must contain at least one number",
+      });
+    }
+
+    if (PASSWORD_REQUIRES_SPECIAL && !/[!@#$%^&*]/.test(newPassword)) {
+      errors.push({
+        field: "newPassword",
+        message: "Password must contain at least one special character (!@#$%^&*)",
+      });
+    }
+  }
+
+  // Confirm password validation
+  if (!confirmPassword || confirmPassword.trim() === "") {
+    errors.push({
+      field: "confirmPassword",
+      message: "Please confirm your new password",
+    });
+  } else if (confirmPassword.length > 128) {
+    errors.push({
+      field: "confirmPassword",
+      message: "Confirm password is too long",
+    });
+  } else if (newPassword !== confirmPassword) {
+    errors.push({
+      field: "confirmPassword",
+      message: "Passwords do not match",
+    });
+  }
+
+  // Check if new password is same as current (only if both are provided and valid)
+  if (currentPassword && newPassword && currentPassword.trim() !== "" && newPassword.trim() !== "" && 
+      currentPassword === newPassword) {
+    errors.push({
+      field: "newPassword",
+      message: "New password must be different from current password",
+    });
+  }
+
+  return errors;
+}

@@ -65,8 +65,7 @@ export default function LoginForm() {
         return;
       }
       console.log("Login successful:", data);
-      // Redirect to dashboard on success
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     } catch (error) {
       setGeneralError("An unexpected error occurred");
       console.error(error);
@@ -76,8 +75,8 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md border border-gray-200">
-      <h1 className="text-2xl font-bold mb-6 text-black">Login</h1>
+    <div className="w-full max-w-md mx-auto p-4 sm:p-6 bg-white rounded-lg shadow-md border border-gray-200">
+      <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-black">Login</h1>
 
       {generalError && (
         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -85,9 +84,9 @@ export default function LoginForm() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
             Email
           </label>
           <input
@@ -95,19 +94,19 @@ export default function LoginForm() {
             name="email"
             value={formState.email}
             onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 ${
+            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 ${
               errors.email ? "border-red-500" : "border-gray-300"
             }`}
             placeholder="you@example.com"
             disabled={isLoading}
           />
           {errors.email && (
-            <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+            <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.email}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
             Password
           </label>
           <input
@@ -115,27 +114,27 @@ export default function LoginForm() {
             name="password"
             value={formState.password}
             onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 ${
+            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 ${
               errors.password ? "border-red-500" : "border-gray-300"
             }`}
             placeholder="••••••••"
             disabled={isLoading}
           />
           {errors.password && (
-            <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+            <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.password}</p>
           )}
         </div>
 
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-blue-700 hover:bg-blue-800 disabled:bg-blue-400 text-white font-medium py-2 rounded-lg transition-colors"
+          className="w-full bg-blue-700 hover:bg-blue-800 disabled:bg-blue-400 text-white font-medium py-2 rounded-lg transition-colors text-sm sm:text-base"
         >
           {isLoading ? "Logging in..." : "Login"}
         </button>
       </form>
 
-      <div className="mt-6 space-y-2 text-center text-sm">
+      <div className="mt-4 sm:mt-6 space-y-2 text-center text-xs sm:text-sm">
         <p>
           Don't have an account?{" "}
           <Link href="/auth/signup" className="text-blue-700 hover:underline">

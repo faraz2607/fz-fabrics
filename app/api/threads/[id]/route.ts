@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await getSessionUser();
@@ -12,8 +12,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Extract threadId from params with fallback
-    const threadId = params?.id || request.nextUrl.pathname.split('/').pop();
+    // Await params to get the id
+    const { id: threadId } = await params;
 
     // Validate threadId is provided
     if (!threadId) {

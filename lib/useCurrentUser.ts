@@ -14,6 +14,9 @@ export function useCurrentUser() {
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
+
+  const refetch = () => setRefetchTrigger(prev => prev + 1);
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -21,6 +24,7 @@ export function useCurrentUser() {
         const response = await fetch("/api/auth/me", {
           method: "GET",
           credentials: "include", // Include cookies
+          cache: "no-store",
         });
 
         if (!response.ok) {
@@ -48,7 +52,7 @@ export function useCurrentUser() {
     };
 
     fetchCurrentUser();
-  }, []);
+  }, [refetchTrigger]);
 
-  return { user, loading, error };
+  return { user, loading, error, refetch };
 }
