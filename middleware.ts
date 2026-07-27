@@ -34,9 +34,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }
 
-  // Redirect to dashboard if trying to access auth routes while authenticated
+  // Keep auth pages reachable so users can switch accounts without logging out first.
   if (isAuthRoute && isAuthenticated) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.next();
   }
 
   return NextResponse.next();

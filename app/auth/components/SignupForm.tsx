@@ -116,7 +116,7 @@ export default function SignupForm() {
             name="name"
             value={formState.name}
             onChange={handleChange}
-            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 ${
+            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 text-gray-700 ${
               errors.name ? "border-red-500" : "border-gray-300"
             }`}
             placeholder="John Doe"
@@ -136,7 +136,7 @@ export default function SignupForm() {
             name="email"
             value={formState.email}
             onChange={handleChange}
-            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 ${
+            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 text-gray-700 ${
               errors.email ? "border-red-500" : "border-gray-300"
             }`}
             placeholder="you@example.com"
@@ -156,7 +156,7 @@ export default function SignupForm() {
             name="password"
             value={formState.password}
             onChange={handleChange}
-            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 ${
+            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 text-gray-700 ${
               errors.password ? "border-red-500" : "border-gray-300"
             }`}
             placeholder="••••••••"
@@ -217,7 +217,7 @@ export default function SignupForm() {
             name="confirmPassword"
             value={formState.confirmPassword}
             onChange={handleChange}
-            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 ${
+            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 text-gray-700 ${
               errors.confirmPassword ? "border-red-500" : "border-gray-300"
             }`}
             placeholder="••••••••"

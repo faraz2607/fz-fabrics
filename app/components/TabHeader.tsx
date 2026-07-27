@@ -11,8 +11,8 @@ type Tab = { href: string; label: string };
 
 const tabs: Tab[] = [
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/thread", label: "Thread" },
   { href: "/employee", label: "Employee" },
+  { href: "/thread", label: "Thread" },
   { href: "/bill", label: "Bill" },
 ];
 
@@ -24,42 +24,53 @@ export default function Header() {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
-  const popoverRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
+  const desktopPopoverRef = useRef<HTMLDivElement>(null);
+  const mobilePopoverRef = useRef<HTMLDivElement>(null);
+  const desktopButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileButtonRef = useRef<HTMLButtonElement>(null);
 
   const isAuthPage = pathname?.startsWith('/auth');
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        popoverRef.current &&
-        !popoverRef.current.contains(event.target as Node) &&
-        buttonRef.current &&
-        !buttonRef.current.contains(event.target as Node)
-      ) {
+      const isClickInsideDesktopPopover = desktopPopoverRef.current?.contains(event.target as Node);
+      const isClickInsideMobilePopover = mobilePopoverRef.current?.contains(event.target as Node);
+      const isClickOnDesktopButton = desktopButtonRef.current?.contains(event.target as Node);
+      const isClickOnMobileButton = mobileButtonRef.current?.contains(event.target as Node);
+
+      if (!isClickInsideDesktopPopover && !isClickInsideMobilePopover && !isClickOnDesktopButton && !isClickOnMobileButton) {
         setIsPopoverOpen(false);
       }
     }
 
     if (isPopoverOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
     }
   }, [isPopoverOpen]);
 
-  const handleLogoutClick = async () => {
+  const handleLogoutClick = async (event?: React.MouseEvent<HTMLButtonElement>) => {
+    event?.preventDefault();
+    event?.stopPropagation();
     setIsLoggingOut(true);
+    setIsPopoverOpen(false);
+    setIsMobileMenuOpen(false);
+
     try {
       const response = await fetch("/api/auth/logout", {
         method: "POST",
+        credentials: "include",
       });
 
       if (response.ok) {
-        setIsPopoverOpen(false);
-        router.push("/auth/login");
+        router.replace("/auth/login");
+        return;
       }
+
+      router.replace("/auth/login");
     } catch (error) {
       console.error("Logout failed:", error);
+      router.replace("/auth/login");
     } finally {
       setIsLoggingOut(false);
     }
@@ -107,21 +118,28 @@ export default function Header() {
             {user && (
               <div className="relative">
                 <button
-                  ref={buttonRef}
-                  onClick={() => setIsPopoverOpen(!isPopoverOpen)}
-                  className="flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-sm font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  type="button"
+                  ref={desktopButtonRef}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setIsPopoverOpen((prev) => !prev);
+                  }}
+                  className="flex items-center justify-center w-9 h-9 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 text-white text-sm font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   title={user.name}
                 >
                   {firstLetter}
                 </button>
                 {isPopoverOpen && (
                   <div
-                    ref={popoverRef}
+                    ref={desktopPopoverRef}
+                    onMouseDown={(event) => event.stopPropagation()}
+                    onClick={(event) => event.stopPropagation()}
                     className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-50"
                   >
                     <div className="px-4 py-3 border-b border-gray-200">
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-semibold text-lg">
+                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 text-white font-semibold text-lg">
                           {firstLetter}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -135,7 +153,12 @@ export default function Header() {
 
                     <div className="p-2 space-y-1">
                       <button
-                        onClick={handleChangePasswordClick}
+                        type="button"
+                        onMouseDown={(event) => event.stopPropagation()}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleChangePasswordClick();
+                        }}
                         className="w-full px-3 py-2 text-left text-gray-700 hover:bg-gray-50 rounded-md transition-colors font-medium text-sm flex items-center gap-2"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,7 +170,12 @@ export default function Header() {
 
                     <div className="border-t border-gray-100 p-2">
                       <button
-                        onClick={handleLogoutClick}
+                        type="button"
+                        onMouseDown={(event) => event.stopPropagation()}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleLogoutClick(event);
+                        }}
                         disabled={isLoggingOut}
                         className="w-full text-left px-3 py-2 text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm flex items-center gap-2"
                       >
@@ -182,21 +210,28 @@ export default function Header() {
             {user && (
               <div className="relative">
                 <button
-                  ref={buttonRef}
-                  onClick={() => setIsPopoverOpen(!isPopoverOpen)}
-                  className="flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-sm font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  type="button"
+                  ref={mobileButtonRef}
+                  onMouseDown={(event) => event.stopPropagation()}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setIsPopoverOpen((prev) => !prev);
+                  }}
+                  className="flex items-center justify-center w-9 h-9 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 text-white text-sm font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   title={user.name}
                 >
                   {firstLetter}
                 </button>
                 {isPopoverOpen && (
                   <div
-                    ref={popoverRef}
+                    ref={mobilePopoverRef}
+                    onMouseDown={(event) => event.stopPropagation()}
+                    onClick={(event) => event.stopPropagation()}
                     className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 z-50"
                   >
                     <div className="px-4 py-3 border-b border-gray-200">
                       <div className="flex items-center gap-3 mb-3">
-                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-semibold text-lg">
+                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 text-white font-semibold text-lg">
                           {firstLetter}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -210,7 +245,12 @@ export default function Header() {
 
                     <div className="p-2 space-y-1">
                       <button
-                        onClick={handleChangePasswordClick}
+                        type="button"
+                        onMouseDown={(event) => event.stopPropagation()}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleChangePasswordClick();
+                        }}
                         className="w-full px-3 py-2 text-left text-gray-700 hover:bg-gray-50 rounded-md transition-colors font-medium text-sm flex items-center gap-2"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -222,7 +262,12 @@ export default function Header() {
 
                     <div className="border-t border-gray-100 p-2">
                       <button
-                        onClick={handleLogoutClick}
+                        type="button"
+                        onMouseDown={(event) => event.stopPropagation()}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleLogoutClick(event);
+                        }}
                         disabled={isLoggingOut}
                         className="w-full text-left px-3 py-2 text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm flex items-center gap-2"
                       >

@@ -94,7 +94,7 @@ export default function LoginForm() {
             name="email"
             value={formState.email}
             onChange={handleChange}
-            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 ${
+            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 text-gray-700 ${
               errors.email ? "border-red-500" : "border-gray-300"
             }`}
             placeholder="you@example.com"
@@ -114,7 +114,7 @@ export default function LoginForm() {
             name="password"
             value={formState.password}
             onChange={handleChange}
-            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 ${
+            className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 text-gray-700 ${
               errors.password ? "border-red-500" : "border-gray-300"
             }`}
             placeholder="••••••••"
@@ -134,7 +134,7 @@ export default function LoginForm() {
         </button>
       </form>
 
-      <div className="mt-4 sm:mt-6 space-y-2 text-center text-xs sm:text-sm">
+      <div className="mt-4 sm:mt-6 space-y-2 text-center text-xs sm:text-sm text-black">
         <p>
           Don't have an account?{" "}
           <Link href="/auth/signup" className="text-blue-700 hover:underline">

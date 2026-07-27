@@ -5,11 +5,15 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const start = searchParams.get("start");
   const end = searchParams.get("end");
+  const employeeId = searchParams.get("employeeId");
 
   try {
     const where: any = {};
     if (start && end) {
       where.createdAt = { gte: new Date(start), lte: new Date(end) };
+    }
+    if (employeeId) {
+      where.employeeId = employeeId;
     }
 
     const grouped = await prisma.fabric.groupBy({
