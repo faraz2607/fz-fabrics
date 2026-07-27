@@ -34,6 +34,8 @@ export default function DashboardPage() {
   interface FabricCount { type: string; count: number; }
   const [fabricCounts, setFabricCounts] = useState<FabricCount[]>([]);
   const [fabricCountsLoading, setFabricCountsLoading] = useState(false);
+  const [employeesList, setEmployeesList] = useState<{ id: string; name: string }[]>([]);
+  const [fabricCountsEmployeeId, setFabricCountsEmployeeId] = useState<string>("all");
 
   const [isLoadingThreads, setIsLoadingThreads] = useState(true);
   const [filterType, setFilterType] = useState<string>("all");
@@ -79,7 +81,11 @@ export default function DashboardPage() {
   const fetchFabricCounts = async (start: string, end: string) => {
     setFabricCountsLoading(true);
     try {
-      const res = await fetch(`/api/fabric-counts?start=${start}&end=${end}`);
+      let url = `/api/fabric-counts?start=${start}&end=${end}`;
+      if (fabricCountsEmployeeId && fabricCountsEmployeeId !== "all") {
+        url += `&employeeId=${fabricCountsEmployeeId}`;
+      }
+      const res = await fetch(url);
       if (res.ok) setFabricCounts(await res.json());
     } catch { setFabricCounts([]); } finally { setFabricCountsLoading(false); }
   };
@@ -124,7 +130,23 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (fabricCountsStart && fabricCountsEnd) fetchFabricCounts(fabricCountsStart, fabricCountsEnd);
-  }, [fabricCountsStart, fabricCountsEnd]);
+  }, [fabricCountsStart, fabricCountsEnd, fabricCountsEmployeeId]);
+
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const res = await fetch("/api/employees");
+        if (res.ok) {
+          const data = await res.json();
+          setEmployeesList(data.map((e: any) => ({ id: e.id, name: e.name })));
+        }
+      } catch (err) {
+        console.error("Failed to fetch employees", err);
+      }
+    };
+
+    fetchEmployees();
+  }, [user?.id]);
 
   const handleEarningsFilter = (type: string, start?: string, end?: string) => {
     setEarningsDateRange(type);
@@ -241,53 +263,6 @@ export default function DashboardPage() {
   return (
     <div className="space-y-4 sm:space-y-6">
 
-      {/* Thread Cost Trend Chart */}
-      <div className="bg-white rounded-lg sm:rounded-xl border border-gray-200 shadow-sm p-3 sm:p-5">
-        <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 mb-3 sm:mb-4">
-          <h3 className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Thread Cost Trend</h3>
-          <div className="flex flex-wrap gap-2 sm:gap-3">
-            <Dropdown
-              label=""
-              value={filterType}
-              onChange={setFilterType}
-              options={[
-                { value: "all", label: "All Types" },
-                ...DEFAULT_THREAD_TYPES.map((type) => ({ value: type, label: type })),
-              ]}
-              minWidth="min-w-32 sm:min-w-40"
-            />
-            <div className="relative">
-              <Dropdown
-                label=""
-                value={dateRange}
-                onChange={(value) => {
-                  setDateRange(value);
-                  setShowCustomDatePicker(value === "custom");
-                }}
-                options={DATE_RANGE_OPTIONS}
-                minWidth="min-w-32 sm:min-w-40"
-              />
-              {dateRange === "custom" && (
-                <CustomDateRangePicker
-                  startDate={customDateRange.startDate}
-                  endDate={customDateRange.endDate}
-                  onStartDateChange={(date) => setCustomDateRange((prev) => ({ ...prev, startDate: date }))}
-                  onEndDateChange={(date) => setCustomDateRange((prev) => ({ ...prev, endDate: date }))}
-                  isOpen={showCustomDatePicker}
-                  onClose={() => setShowCustomDatePicker(false)}
-                  trigger={<div></div>}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-        {isLoadingThreads ? (
-          <TableSkeleton rows={5} cols={4} />
-        ) : (
-          <ThreadChart threads={getFilteredThreads()} />
-        )}
-      </div>
-
       {/* Row: Employee Earnings + Fabric Count */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
 
@@ -349,22 +324,38 @@ export default function DashboardPage() {
               Fabric Count <span className="font-bold text-gray-900">- {fabricCounts.reduce((sum, f) => sum + f.count, 0)}</span>
             </h3>
             <div className="relative">
-              <Dropdown
-                label=""
-                value={fabricCountsDateRange}
-                onChange={(value) => {
-                  setFabricCountsDateRange(value);
-                  if (value === "custom") setShowFabricCountsCustomPicker(true);
-                  else handleFabricCountsFilter(value);
-                }}
-                options={[
-                  { value: "current", label: "Current Week" },
-                  { value: "last", label: "Last Week" },
-                  { value: "4week", label: "Last 4 Weeks" },
-                  { value: "custom", label: "Custom" },
-                ]}
-                minWidth="min-w-32 sm:min-w-40"
-              />
+              <div className="flex items-center gap-2">
+                <div>
+                  <Dropdown
+                    label=""
+                    value={fabricCountsEmployeeId}
+                    onChange={(value) => setFabricCountsEmployeeId(value)}
+                    options={[
+                      { value: "all", label: "All Employees" },
+                      ...employeesList.map((e) => ({ value: e.id, label: e.name })),
+                    ]}
+                    minWidth="min-w-36"
+                  />
+                </div>
+                <div>
+                  <Dropdown
+                    label=""
+                    value={fabricCountsDateRange}
+                    onChange={(value) => {
+                      setFabricCountsDateRange(value);
+                      if (value === "custom") setShowFabricCountsCustomPicker(true);
+                      else handleFabricCountsFilter(value);
+                    }}
+                    options={[
+                      { value: "current", label: "Current Week" },
+                      { value: "last", label: "Last Week" },
+                      { value: "4week", label: "Last 4 Weeks" },
+                      { value: "custom", label: "Custom" },
+                    ]}
+                    minWidth="min-w-32 sm:min-w-40"
+                  />
+                </div>
+              </div>
               {fabricCountsDateRange === "custom" && (
                 <CustomDateRangePicker
                   startDate={fabricCountsCustomRange.startDate}
@@ -395,6 +386,53 @@ export default function DashboardPage() {
           )}
         </div>
 
+      </div>
+      
+      {/* Thread Cost Trend Chart */}
+      <div className="bg-white rounded-lg sm:rounded-xl border border-gray-200 shadow-sm p-3 sm:p-5">
+        <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3 mb-3 sm:mb-4">
+          <h3 className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Thread Cost Trend</h3>
+          <div className="flex flex-wrap gap-2 sm:gap-3">
+            <Dropdown
+              label=""
+              value={filterType}
+              onChange={setFilterType}
+              options={[
+                { value: "all", label: "All Types" },
+                ...DEFAULT_THREAD_TYPES.map((type) => ({ value: type, label: type })),
+              ]}
+              minWidth="min-w-32 sm:min-w-40"
+            />
+            <div className="relative">
+              <Dropdown
+                label=""
+                value={dateRange}
+                onChange={(value) => {
+                  setDateRange(value);
+                  setShowCustomDatePicker(value === "custom");
+                }}
+                options={DATE_RANGE_OPTIONS}
+                minWidth="min-w-32 sm:min-w-40"
+              />
+              {dateRange === "custom" && (
+                <CustomDateRangePicker
+                  startDate={customDateRange.startDate}
+                  endDate={customDateRange.endDate}
+                  onStartDateChange={(date) => setCustomDateRange((prev) => ({ ...prev, startDate: date }))}
+                  onEndDateChange={(date) => setCustomDateRange((prev) => ({ ...prev, endDate: date }))}
+                  isOpen={showCustomDatePicker}
+                  onClose={() => setShowCustomDatePicker(false)}
+                  trigger={<div></div>}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+        {isLoadingThreads ? (
+          <TableSkeleton rows={5} cols={4} />
+        ) : (
+          <ThreadChart threads={getFilteredThreads()} />
+        )}
       </div>
     </div>
   );
