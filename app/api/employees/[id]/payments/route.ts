@@ -11,7 +11,8 @@ export async function GET(
     const start = searchParams.get("start");
     const end = searchParams.get("end");
 
-    const whereClause: any = { employeeId };
+    const user = await (await import("@/lib/session")).getSessionUser();
+    const whereClause: any = { employeeId, organizationId: user?.organizationId };
 
     if (start && end) {
       whereClause.createdAt = {
@@ -47,9 +48,11 @@ export async function POST(
     const earningAfterDonation = parseFloat(totalEarning ?? 0) - donationAmount;
     const balanceAmount = earningAfterDonation - parseFloat(amount);
 
+    const user = await (await import("@/lib/session")).getSessionUser();
     const payment = await prisma.payment.create({
       data: {
         employeeId,
+        organizationId: user?.organizationId || "",
         amount: parseFloat(amount),
         totalEarning: parseFloat(totalEarning ?? 0),
         donation: donationAmount,

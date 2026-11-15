@@ -47,12 +47,13 @@ export default function LoginForm() {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(formState),
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
+      if (!response.ok || !data.success) {
         if (data.errors) {
           const errorMap: ErrorState = {};
           (data.errors as ValidationError[]).forEach((error) => {
@@ -64,8 +65,7 @@ export default function LoginForm() {
         }
         return;
       }
-      console.log("Login successful:", data);
-      window.location.href = "/dashboard";
+      router.replace("/dashboard");
     } catch (error) {
       setGeneralError("An unexpected error occurred");
       console.error(error);
@@ -143,10 +143,10 @@ export default function LoginForm() {
         </p>
         <p>
           <Link
-            href="/auth/forgot-password"
+            href="/auth/reset-password"
             className="text-blue-700 hover:underline"
           >
-            Forgot password?
+            Reset password?
           </Link>
         </p>
       </div>

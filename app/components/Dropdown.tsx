@@ -69,6 +69,7 @@ export default function Dropdown({
 
       <div className={`relative ${minWidth}`} ref={dropdownRef}>
         <button
+          type="button"
           ref={buttonRef}
           onClick={() => !disabled && setIsOpen(!isOpen)}
           disabled={disabled}
@@ -101,6 +102,7 @@ export default function Dropdown({
             <div className="max-h-64 overflow-y-auto">
               {options.map((option, index) => (
                 <button
+                  type="button"
                   key={option.value}
                   onClick={() => handleSelect(option.value)}
                   className={`w-full px-3 py-2 sm:px-4 sm:py-2.5 text-left text-xs sm:text-sm font-medium transition-colors ${

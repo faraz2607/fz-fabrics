@@ -25,11 +25,11 @@ export default function Modal({
       onClick={onClose}
     >
       <div
-        className={`relative bg-white rounded-xl shadow-2xl ${maxWidth} w-full overflow-hidden`}
+        className={`relative bg-white rounded-xl shadow-2xl ${maxWidth} w-full overflow-visible`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header gradient bar */}
-        <div className="h-1 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
+        <div className="h-1 w-full rounded-t-xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
         <div className="px-4 py-3 sm:px-6 sm:py-5">
           <div className="flex items-center justify-between mb-3 sm:mb-5">
             <h2 className="text-base sm:text-xl font-bold text-gray-900 tracking-tight">{title}</h2>

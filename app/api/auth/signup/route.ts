@@ -5,7 +5,7 @@ import { createSession } from "@/lib/session";
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, password, confirmPassword } = await request.json();
+    const { name, email, password, confirmPassword, organizationName, inviteCode } = await request.json();
 
     // Validate form
     const validationErrors = validateSignupForm(
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create user
-    const result = await createUser(email, name, password);
+    const result = await createUser(email, name, password, organizationName, inviteCode);
     if (!result.success) {
       return NextResponse.json(
         { success: false, error: result.error },
@@ -41,6 +41,9 @@ export async function POST(request: NextRequest) {
           id: result.user!.id,
           email: result.user!.email,
           name: result.user!.name,
+          organizationId: result.user!.organizationId,
+          organizationName: result.user!.organizationName,
+          role: result.user!.role,
         },
       },
       { status: 201 }

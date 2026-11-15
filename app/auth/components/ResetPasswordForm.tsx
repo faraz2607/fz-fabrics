@@ -1,264 +1,117 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import Link from "next/link";
 import type { ValidationError } from "@/lib/validation";
 
-interface FormState {
-  token: string;
-  password: string;
-  confirmPassword: string;
-}
-
-interface ErrorState {
-  [key: string]: string;
-}
-
 export default function ResetPasswordForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [formState, setFormState] = useState<FormState>({
-    token: "",
-    password: "",
-    confirmPassword: "",
-  });
-  const [errors, setErrors] = useState<ErrorState>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [generalError, setGeneralError] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [emailAccepted, setEmailAccepted] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [passwordRequirements, setPasswordRequirements] = useState({
-    length: false,
-    uppercase: false,
-    number: false,
-    special: false,
-  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    const token = searchParams.get("token");
-    if (!token) {
-      setGeneralError("Invalid or missing reset token");
-      return;
-    }
-    setFormState((prev) => ({ ...prev, token }));
-  }, [searchParams]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormState((prev) => ({ ...prev, [name]: value }));
-
-    // Check password requirements on change
-    if (name === "password") {
-      setPasswordRequirements({
-        length: value.length >= 8,
-        uppercase: /[A-Z]/.test(value),
-        number: /[0-9]/.test(value),
-        special: /[!@#$%^&*]/.test(value),
-      });
-    }
-
-    // Clear error for this field when user starts typing
-    if (errors[name]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitEmail = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError("");
+    setFieldErrors({});
     setIsLoading(true);
-    setGeneralError("");
-    setErrors({});
-
     try {
-      const response = await fetch("/api/auth/reset-password", {
+      const response = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          token: formState.token,
-          password: formState.password,
-          confirmPassword: formState.confirmPassword,
-        }),
+        body: JSON.stringify({ email }),
       });
-
       const data = await response.json();
-
       if (!response.ok) {
         if (data.errors) {
-          const errorMap: ErrorState = {};
-          (data.errors as ValidationError[]).forEach((error) => {
-            errorMap[error.field] = error.message;
-          });
-          setErrors(errorMap);
-        } else {
-          setGeneralError(data.error || "Failed to reset password");
-        }
+          const parsed: Record<string, string> = {};
+          (data.errors as ValidationError[]).forEach((item) => { parsed[item.field] = item.message; });
+          setFieldErrors(parsed);
+        } else setError(data.error || "Could not start password reset.");
         return;
       }
-
-      // Show success message
-      setIsSubmitted(true);
-    } catch (error) {
-      setGeneralError("An unexpected error occurred");
-      console.error(error);
+      setEmailAccepted(true);
+    } catch {
+      setError("Could not start password reset. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  if (!formState.token) {
-    return (
-      <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md border border-gray-200">
-        <h1 className="text-2xl font-bold mb-4 text-black">
-          Invalid Link
-        </h1>
-        <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-          <p>{generalError}</p>
-        </div>
-        <Link
-          href="/auth/forgot-password"
-          className="text-blue-700 hover:underline text-sm"
-        >
-          Request a new reset link
-        </Link>
-      </div>
-    );
-  }
+  const submitNewPassword = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError("");
+    setFieldErrors({});
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password, confirmPassword }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        if (data.errors) {
+          const parsed: Record<string, string> = {};
+          (data.errors as ValidationError[]).forEach((item) => { parsed[item.field] = item.message; });
+          setFieldErrors(parsed);
+        } else setError(data.error || "Could not reset your password.");
+        return;
+      }
+      setIsSubmitted(true);
+    } catch {
+      setError("Could not reset your password. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (isSubmitted) {
     return (
-      <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md border border-gray-200">
-        <h1 className="text-2xl font-bold mb-4 text-black">
-          Password Reset Successful
-        </h1>
-        <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
-          <p>Your password has been successfully reset.</p>
-        </div>
-        <p className="text-gray-600 text-sm mb-6">
-          You can now login with your new password.
-        </p>
-        <Link
-          href="/auth/login"
-          className="text-blue-700 hover:underline text-sm font-medium"
-        >
-          Go to login
-        </Link>
+      <div className="mx-auto w-full max-w-md rounded-lg border border-gray-200 bg-white p-4 shadow-md sm:p-6">
+        <h1 className="mb-3 text-xl font-bold text-gray-900 sm:text-2xl">Password reset successful</h1>
+        <p className="mb-5 rounded border border-green-300 bg-green-50 p-4 text-sm text-green-800">Your password has been reset successfully. You can now sign in with your new password.</p>
+        <Link href="/auth/login" className="inline-flex rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800">Click here to log in</Link>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-md mx-auto p-6 bg-white rounded-lg shadow-md border border-gray-200">
-      <h1 className="text-2xl font-bold mb-6 text-black">Reset Password</h1>
+    <div className="mx-auto w-full max-w-md rounded-lg border border-gray-200 bg-white p-4 shadow-md sm:p-6">
+      <h1 className="mb-3 text-xl font-bold text-gray-900 sm:text-2xl">Reset password</h1>
+      <p className="mb-5 text-sm text-gray-600">{emailAccepted ? "Choose a new password for your account." : "Enter your account email to check whether password reset is enabled."}</p>
+      {error && <p role="alert" className="mb-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
-      {generalError && (
-        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-          {generalError}
-        </div>
+      {!emailAccepted ? (
+        <form onSubmit={submitEmail} className="space-y-4">
+          <div>
+            <label htmlFor="reset-email" className="mb-1 block text-sm font-medium text-gray-700">Email address</label>
+            <input id="reset-email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required disabled={isLoading} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-500 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200" placeholder="you@example.com" />
+            {fieldErrors.email && <p className="mt-1 text-sm text-red-600">{fieldErrors.email}</p>}
+          </div>
+          <button type="submit" disabled={isLoading} className="w-full rounded-lg bg-blue-700 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-50">{isLoading ? "Checking…" : "Continue"}</button>
+        </form>
+      ) : (
+        <form onSubmit={submitNewPassword} className="space-y-4">
+          <div>
+            <label htmlFor="new-password" className="mb-1 block text-sm font-medium text-gray-700">New password</label>
+            <input id="new-password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" required disabled={isLoading} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200" />
+            {fieldErrors.password && <p className="mt-1 text-sm text-red-600">{fieldErrors.password}</p>}
+            <p className="mt-1 text-xs text-gray-500">Use at least 8 characters, with an uppercase letter, a number, and a special character.</p>
+          </div>
+          <div>
+            <label htmlFor="confirm-password" className="mb-1 block text-sm font-medium text-gray-700">Confirm new password</label>
+            <input id="confirm-password" type="password" value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} autoComplete="new-password" required disabled={isLoading} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200" />
+            {fieldErrors.confirmPassword && <p className="mt-1 text-sm text-red-600">{fieldErrors.confirmPassword}</p>}
+          </div>
+          <button type="submit" disabled={isLoading} className="w-full rounded-lg bg-blue-700 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-50">{isLoading ? "Resetting…" : "Save new password"}</button>
+        </form>
       )}
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            New Password
-          </label>
-          <input
-            type="password"
-            name="password"
-            value={formState.password}
-            onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 ${
-              errors.password ? "border-red-500" : "border-gray-300"
-            }`}
-            placeholder="••••••••"
-            disabled={isLoading}
-          />
-          {errors.password && (
-            <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-          )}
-
-          {formState.password && (
-            <div className="mt-2 text-xs space-y-1">
-              <p
-                className={
-                  passwordRequirements.length
-                    ? "text-green-600"
-                    : "text-gray-500"
-                }
-              >
-                ✓ At least 8 characters
-              </p>
-              <p
-                className={
-                  passwordRequirements.uppercase
-                    ? "text-green-600"
-                    : "text-gray-500"
-                }
-              >
-                ✓ One uppercase letter
-              </p>
-              <p
-                className={
-                  passwordRequirements.number
-                    ? "text-green-600"
-                    : "text-gray-500"
-                }
-              >
-                ✓ One number
-              </p>
-              <p
-                className={
-                  passwordRequirements.special
-                    ? "text-green-600"
-                    : "text-gray-500"
-                }
-              >
-                ✓ One special character (!@#$%^&*)
-              </p>
-            </div>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Confirm Password
-          </label>
-          <input
-            type="password"
-            name="confirmPassword"
-            value={formState.confirmPassword}
-            onChange={handleChange}
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 ${
-              errors.confirmPassword ? "border-red-500" : "border-gray-300"
-            }`}
-            placeholder="••••••••"
-            disabled={isLoading}
-          />
-          {errors.confirmPassword && (
-            <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
-          )}
-        </div>
-
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full bg-blue-700 hover:bg-blue-800 disabled:bg-blue-400 text-white font-medium py-2 rounded-lg transition-colors"
-        >
-          {isLoading ? "Resetting..." : "Reset Password"}
-        </button>
-      </form>
-
-      <div className="mt-6 text-center text-sm">
-        <p>
-          Remember your password?{" "}
-          <Link href="/auth/login" className="text-blue-600 hover:underline">
-            Login
-          </Link>
-        </p>
-      </div>
+      <p className="mt-5 text-center text-sm text-gray-600">Remember your password? <Link href="/auth/login" className="font-medium text-blue-700 hover:underline">Log in</Link></p>
     </div>
   );
 }

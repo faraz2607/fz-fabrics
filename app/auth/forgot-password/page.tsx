@@ -1,10 +1,10 @@
-import ForgotPasswordForm from "../components/ForgotPasswordForm";
+import { redirect } from "next/navigation";
 
 export const metadata = {
-  title: "Forgot Password | FZ Fabrics",
-  description: "Reset your password",
+  title: "Reset Password",
+  description: "Recover access to your FabriTrack account.",
 };
 
 export default function ForgotPasswordPage() {
-  return <ForgotPasswordForm />;
+  redirect("/auth/reset-password");
 }

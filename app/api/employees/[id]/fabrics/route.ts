@@ -8,6 +8,7 @@ export async function POST(
 ) {
   const { id: employeeId } = await context.params;
   const { type, cost, count, createdAt } = await req.json();
+  const user = await (await import("@/lib/session")).getSessionUser();
 
   if (!type || !cost || !count) {
     return NextResponse.json(
@@ -27,6 +28,7 @@ export async function POST(
         count: parsedCount,
         earning, 
         employeeId,
+        organizationId: user?.organizationId || "",
         createdAt: createdAt ? new Date(createdAt) : undefined,
       },
     });
@@ -48,7 +50,8 @@ export async function GET(
   const { searchParams } = new URL(req.url);
   const start = searchParams.get('start');
   const end = searchParams.get('end');
-  let where: any = { employeeId };
+  const user = await (await import("@/lib/session")).getSessionUser();
+  let where: any = { employeeId, organizationId: user?.organizationId };
   if (start && end) {
     where.createdAt = {
       gte: new Date(start),

@@ -7,6 +7,7 @@ import Modal from './Modal';
 import TableSkeleton from './TableSkeleton';
 import NoDataFound from './NoDataFound';
 import { useRef } from 'react';
+import { useCurrentUser } from '@/lib/useCurrentUser';
 interface FabricType {
   id?: string;
   type: string;
@@ -23,6 +24,8 @@ interface Employee {
 }
 
 export default function EmployeeList() {
+  const { user } = useCurrentUser();
+  const canManageEmployees = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -240,8 +243,10 @@ export default function EmployeeList() {
                       <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm font-medium text-green-600">₹{employee.donation?.toFixed(2) || '0.00'}</td>
                       <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500">{formatDate(employee.createdAt)}</td>
                       <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm font-medium space-x-2 sm:space-x-3" onClick={(e) => e.stopPropagation()}>
-                        <button onClick={() => handleEditEmployee(employee)} className="text-indigo-600 hover:text-indigo-900 font-medium">Edit</button>
-                        <button onClick={() => handleDeleteEmployee(employee)} className="text-red-500 hover:text-red-700 font-medium">Delete</button>
+                        {canManageEmployees ? <>
+                          <button onClick={() => handleEditEmployee(employee)} className="text-indigo-600 hover:text-indigo-900 font-medium">Edit</button>
+                          <button onClick={() => handleDeleteEmployee(employee)} className="text-red-500 hover:text-red-700 font-medium">Delete</button>
+                        </> : <span className="text-xs text-gray-400">View only</span>}
                       </td>
                     </tr>
                   ))}

@@ -1,8 +1,8 @@
 import SignupForm from "../components/SignupForm";
 
 export const metadata = {
-  title: "Sign Up | FZ Fabrics",
-  description: "Create a new account",
+  title: "Create Account",
+  description: "Create a FabriTrack account to manage fabric and thread inventory, employees, production, earnings, and billing for your organization.",
 };
 
 export default function SignupPage() {

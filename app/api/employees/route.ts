@@ -17,9 +17,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const organizationId = (await prisma.organizationMember.findFirst({
+      where: { userId },
+      select: { organizationId: true },
+    }))?.organizationId;
+
     const employees = await prisma.employee.findMany({
       where: {
-        userId
+        organizationId,
       },
       orderBy: {
         createdAt: 'desc'
@@ -65,12 +70,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Employee with this email already exists' }, { status: 400 });
     }
 
+    const organizationId = (await prisma.organizationMember.findFirst({
+      where: { userId },
+      select: { organizationId: true },
+    }))?.organizationId;
+
+    if (!organizationId) {
+      return NextResponse.json({ error: 'Organization not found' }, { status: 400 });
+    }
+
     const employee = await prisma.employee.create({
       data: {
         name,
         email,
         phone,
         donation: donation || 0,
+        organizationId,
         userId
       }
     });

@@ -22,6 +22,8 @@ export async function createSession(userId: string): Promise<string> {
 export async function validateSession(sessionId: string): Promise<{
   valid: boolean;
   userId?: string;
+  organizationActive?: boolean;
+  organizationStatus?: "PENDING" | "ACTIVE" | "INACTIVE";
 }> {
   try {
     const session = await prisma.session.findUnique({
@@ -39,7 +41,27 @@ export async function validateSession(sessionId: string): Promise<{
       return { valid: false };
     }
 
-    return { valid: true, userId: session.userId };
+    const account = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { isActive: true },
+    });
+    if (!account || account.isActive === false) {
+      await prisma.session.delete({ where: { id: sessionId } });
+      return { valid: false };
+    }
+
+    // Super Admin access is platform-wide and must not depend on organization status.
+    if (isConfiguredSuperAdmin(session.userId)) {
+      return { valid: true, userId: session.userId, organizationActive: true };
+    }
+
+    const membership = await prisma.organizationMember.findFirst({
+      where: { userId: session.userId },
+      orderBy: { createdAt: "asc" },
+      select: { organization: { select: { isActive: true } } },
+    });
+    const organizationActive = Boolean(membership) && membership?.organization?.isActive !== false;
+    return { valid: true, userId: session.userId, organizationActive };
   } catch (error) {
     console.error("Error validating session:", error);
     return { valid: false };
@@ -56,7 +78,7 @@ export async function destroySession(sessionId: string): Promise<void> {
   }
 }
 
-export async function getSessionUser(): Promise<{ id: string; name: string; email: string } | null> {
+export async function getSessionUser(): Promise<{ id: string; name: string; email: string; organizationId?: string; organizationName?: string; organizationActive?: boolean; organizationStatus?: "PENDING" | "ACTIVE" | "INACTIVE"; role?: string; organizationInviteCode?: string } | null> {
   try {
     const cookieStore = await cookies();
     const sessionId = cookieStore.get("sessionId")?.value;
@@ -73,13 +95,44 @@ export async function getSessionUser(): Promise<{ id: string; name: string; emai
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, name: true, email: true },
+      select: { id: true, name: true, email: true, isActive: true },
     });
 
-    return user;
+    if (!user || user.isActive === false) {
+      return null;
+    }
+
+    const membership = await prisma.organizationMember.findFirst({
+      where: { userId },
+      include: { organization: true },
+      orderBy: { createdAt: "asc" },
+    });
+
+    return {
+      ...user,
+      organizationId: membership?.organizationId,
+      organizationName: membership?.organization?.name,
+      organizationActive: isConfiguredSuperAdmin(user.id) || (Boolean(membership) && membership?.organization?.isActive !== false),
+      organizationStatus: isConfiguredSuperAdmin(user.id)
+        ? "ACTIVE"
+        : !membership
+          ? "PENDING"
+          : membership.organization?.isActive !== false
+          ? "ACTIVE"
+          : membership?.organization?.activatedAt
+            ? "INACTIVE"
+            : "PENDING",
+      role: isConfiguredSuperAdmin(user.id) ? "SUPER_ADMIN" : membership?.role,
+      organizationInviteCode: membership?.organization?.inviteCode,
+    };
   } catch (error) {
     console.error("Error getting session user:", error);
     return null;
   }
+}
+
+export function isConfiguredSuperAdmin(userId: string): boolean {
+  const ids = (process.env.SUPER_ADMIN_USER_IDS || "").split(",").map((value) => value.trim()).filter(Boolean);
+  return ids.length <= 3 && ids.includes(userId);
 }
 

@@ -1,22 +1,39 @@
 // Hook for getting current user from session
 // This is a client-side hook for accessing session information
 
-import { useEffect, useState } from "react";
-import { validateSession } from "./session";
+import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 
 export interface CurrentUser {
   id: string;
   name: string;
   email: string;
+  organizationId?: string;
+  organizationName?: string;
+  organizationInviteCode?: string;
+  organizationActive?: boolean;
+  organizationStatus?: "PENDING" | "ACTIVE" | "INACTIVE";
+  role?: string;
 }
 
 export function useCurrentUser() {
+  const pathname = usePathname();
+  const previousPathname = useRef(pathname);
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refetchTrigger, setRefetchTrigger] = useState(0);
 
   const refetch = () => setRefetchTrigger(prev => prev + 1);
+
+  useEffect(() => {
+    const previousPath = previousPathname.current;
+    previousPathname.current = pathname;
+
+    if (previousPath?.startsWith("/auth") && !pathname?.startsWith("/auth")) {
+      setRefetchTrigger((previous) => previous + 1);
+    }
+  }, [pathname]);
 
   useEffect(() => {
     const fetchCurrentUser = async () => {

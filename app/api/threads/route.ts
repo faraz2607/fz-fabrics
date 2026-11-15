@@ -18,8 +18,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (!user.organizationId) {
+      return NextResponse.json({ error: "Organization not found" }, { status: 400 });
+    }
+
     const thread = await prisma.thread.create({
       data: {
+        organizationId: user.organizationId,
         userId: user.id,
         type,
         color,
@@ -47,7 +52,7 @@ export async function GET(request: NextRequest) {
 
     const threads = await prisma.thread.findMany({
       where: {
-        userId: user.id,
+        organizationId: user.organizationId,
       },
       orderBy: {
         date: "asc",

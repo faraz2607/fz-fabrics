@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateSession } from '@/lib/session';
+import { getSessionUser, validateSession } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(
@@ -23,10 +23,15 @@ export async function GET(
     // Await the params to get the actual id
     const { id } = await params;
 
-    const employee = await prisma.employee.findUnique({
+    const organizationId = (await prisma.organizationMember.findFirst({
+      where: { userId },
+      select: { organizationId: true },
+    }))?.organizationId;
+
+    const employee = await prisma.employee.findFirst({
       where: {
         id,
-        userId
+        organizationId,
       }
     });
 
@@ -46,6 +51,9 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const actor = await getSessionUser();
+    if (!actor) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (actor.role !== 'ADMIN' && actor.role !== 'SUPER_ADMIN') return NextResponse.json({ error: 'Only admins can edit employees' }, { status: 403 });
     const cookieStore = await import('next/headers').then(m => m.cookies());
     const sessionId = cookieStore.get("sessionId")?.value;
 
@@ -70,11 +78,16 @@ export async function PUT(
     // Await the params to get the actual id
     const { id } = await params;
 
-    // Check if employee exists and belongs to the user
-    const existingEmployee = await prisma.employee.findUnique({
+    const organizationId = (await prisma.organizationMember.findFirst({
+      where: { userId },
+      select: { organizationId: true },
+    }))?.organizationId;
+
+    // Check if employee exists and belongs to the organization
+    const existingEmployee = await prisma.employee.findFirst({
       where: {
         id,
-        userId
+        organizationId,
       }
     });
 
@@ -87,7 +100,7 @@ export async function PUT(
       where: {
         email,
         id: { not: id },
-        userId
+        organizationId,
       }
     });
 
@@ -98,7 +111,6 @@ export async function PUT(
     const updatedEmployee = await prisma.employee.update({
       where: {
         id,
-        userId
       },
       data: {
         name,
@@ -120,6 +132,9 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const actor = await getSessionUser();
+    if (!actor) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (actor.role !== 'ADMIN' && actor.role !== 'SUPER_ADMIN') return NextResponse.json({ error: 'Only admins can delete employees' }, { status: 403 });
     const cookieStore = await import('next/headers').then(m => m.cookies());
     const sessionId = cookieStore.get("sessionId")?.value;
 
@@ -136,11 +151,16 @@ export async function DELETE(
     // Await the params to get the actual id
     const { id } = await params;
 
-    // Check if employee exists and belongs to the user
-    const existingEmployee = await prisma.employee.findUnique({
+    const organizationId = (await prisma.organizationMember.findFirst({
+      where: { userId },
+      select: { organizationId: true },
+    }))?.organizationId;
+
+    // Check if employee exists and belongs to the organization
+    const existingEmployee = await prisma.employee.findFirst({
       where: {
         id,
-        userId
+        organizationId,
       }
     });
 
@@ -151,7 +171,6 @@ export async function DELETE(
     await prisma.employee.delete({
       where: {
         id,
-        userId
       }
     });
 

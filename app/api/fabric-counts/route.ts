@@ -8,7 +8,19 @@ export async function GET(req: NextRequest) {
   const employeeId = searchParams.get("employeeId");
 
   try {
-    const where: any = {};
+    const sessionId = req.cookies.get("sessionId")?.value;
+    if (!sessionId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const { validateSession } = await import("@/lib/session");
+    const session = await validateSession(sessionId);
+    if (!session.valid || !session.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const membership = await prisma.organizationMember.findFirst({
+      where: { userId: session.userId },
+      select: { organizationId: true },
+    });
+
+    const where: any = { organizationId: membership?.organizationId };
     if (start && end) {
       where.createdAt = { gte: new Date(start), lte: new Date(end) };
     }
