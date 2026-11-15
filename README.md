@@ -1,4 +1,18 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FabriTrack
+
+FabriTrack helps fabric businesses manage organization workspaces, employees, thread and fabric activity, production counts, earnings, payments, and billing.
+
+## Platform Super Admins
+
+Set `SUPER_ADMIN_USER_IDS` in the server environment to a comma-separated list of up to three existing MongoDB user IDs. These accounts receive the global Super Admin role and can manage users across organizations. This role is controlled only by server configuration; it cannot be assigned from signup or the user interface. If more than three IDs are configured, the allowlist is rejected and no account receives Super Admin access. Provision the accounts first, then add their immutable IDs to this server-only setting.
+
+Before deploying these access controls, apply the MongoDB schema updates with `npm run db:push` and regenerate the Prisma client with `npm run prisma:generate`. The additions include user activation and password-reset settings, plus organization activation status.
+
+## Branding and SEO
+
+Set `NEXT_PUBLIC_SITE_URL` to the canonical public origin of the deployed app (for example, `https://app.yourdomain.com`). FabriTrack uses it as the metadata base and Open Graph URL so shared links resolve correctly on WhatsApp and other social platforms.
+
+Brand and preview assets live in `app/icon.svg`, `app/favicon.ico`, `app/apple-icon.tsx`, `app/opengraph-image.tsx`, and `app/manifest.ts`. Update the SVG and image route when changing the logo, browser icon, installed-app icon, social preview, or PWA name. Page titles and search descriptions are configured in `app/layout.tsx` and the individual `app/auth/*/page.tsx` files. `app/robots.ts` and `app/sitemap.ts` control crawler access and the public signup/login sitemap.
 
 ## Getting Started
 

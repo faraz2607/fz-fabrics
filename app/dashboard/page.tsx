@@ -146,7 +146,7 @@ export default function DashboardPage() {
     };
 
     fetchEmployees();
-  }, [user?.id]);
+  }, [user?.id, user?.role]);
 
   const handleEarningsFilter = (type: string, start?: string, end?: string) => {
     setEarningsDateRange(type);

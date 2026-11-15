@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { ValidationError } from "@/lib/validation";
@@ -10,6 +10,8 @@ interface FormState {
   email: string;
   password: string;
   confirmPassword: string;
+  organizationName: string;
+  inviteCode: string;
 }
 
 interface ErrorState {
@@ -23,6 +25,8 @@ export default function SignupForm() {
     email: "",
     password: "",
     confirmPassword: "",
+    organizationName: "",
+    inviteCode: "",
   });
   const [errors, setErrors] = useState<ErrorState>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -33,6 +37,13 @@ export default function SignupForm() {
     number: false,
     special: false,
   });
+
+  useEffect(() => {
+    const inviteCode = new URLSearchParams(window.location.search).get("inviteCode")?.trim();
+    if (inviteCode) {
+      setFormState((previous) => ({ ...previous, organizationName: "", inviteCode }));
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -86,8 +97,8 @@ export default function SignupForm() {
         return;
       }
 
-      // Redirect to dashboard on success
-      router.push("/dashboard");
+      // Users without an organization must wait for a super admin to map them.
+      router.push(data.user?.organizationId ? "/dashboard" : "/organization-pending");
     } catch (error) {
       setGeneralError("An unexpected error occurred");
       console.error(error);
@@ -107,6 +118,10 @@ export default function SignupForm() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+        <div className="-mb-1">
+          <p className="text-xs leading-5 text-gray-600">Create an organization with a name, join one with an invite code, or leave both blank to be assigned later.</p>
+        </div>
+
         <div>
           <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
             Full Name
@@ -145,6 +160,38 @@ export default function SignupForm() {
           {errors.email && (
             <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.email}</p>
           )}
+        </div>
+
+        <div>
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+            Organization Name (optional)
+          </label>
+          <input
+            type="text"
+            name="organizationName"
+            value={formState.organizationName}
+            onChange={handleChange}
+            className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 text-gray-700 border-gray-300 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
+            placeholder="Acme Fabrics"
+            disabled={isLoading || Boolean(formState.inviteCode.trim())}
+          />
+          {formState.inviteCode.trim() && <p className="mt-1 text-xs text-gray-500">Clear the invite code to create an organization or continue without one.</p>}
+        </div>
+
+        <div>
+          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+            Invite Code (optional)
+          </label>
+          <input
+            type="text"
+            name="inviteCode"
+            value={formState.inviteCode}
+            onChange={handleChange}
+            className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-700 text-gray-700 border-gray-300 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-500"
+            placeholder="Join an existing organization"
+            disabled={isLoading || Boolean(formState.organizationName.trim())}
+          />
+          {formState.organizationName.trim() && <p className="mt-1 text-xs text-gray-500">Clear the organization name to join with an invite code or continue without an organization.</p>}
         </div>
 
         <div>

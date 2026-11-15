@@ -36,6 +36,9 @@ export async function POST(request: NextRequest) {
           id: result.user!.id,
           email: result.user!.email,
           name: result.user!.name,
+          organizationId: result.user!.organizationId,
+          organizationName: result.user!.organizationName,
+          role: result.user!.role,
         },
       },
       { status: 200 }

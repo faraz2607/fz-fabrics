@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateSession } from "@/lib/session";
+import { isConfiguredSuperAdmin, validateSession } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
@@ -32,20 +32,43 @@ export async function GET(request: NextRequest) {
           id: true,
           email: true,
           name: true,
+          isActive: true,
         },
       });
 
-      if (!user) {
+      if (!user || user.isActive === false) {
         return NextResponse.json(
           { success: false, error: "User not found" },
           { status: 404 }
         );
       }
 
+      const membership = await prisma.organizationMember.findFirst({
+        where: { userId: user.id },
+        include: { organization: true },
+        orderBy: { createdAt: "asc" },
+      });
+
       return NextResponse.json(
         {
           success: true,
-          user,
+          user: {
+            ...user,
+            organizationId: membership?.organizationId,
+            organizationName: membership?.organization?.name,
+            organizationInviteCode: membership?.role === "ADMIN" ? membership.organization?.inviteCode : undefined,
+            organizationActive: isConfiguredSuperAdmin(user.id) || (Boolean(membership) && membership?.organization?.isActive !== false),
+            organizationStatus: isConfiguredSuperAdmin(user.id)
+              ? "ACTIVE"
+              : !membership
+                ? "PENDING"
+                : membership.organization?.isActive !== false
+                ? "ACTIVE"
+                : membership?.organization?.activatedAt
+                  ? "INACTIVE"
+                  : "PENDING",
+            role: isConfiguredSuperAdmin(user.id) ? "SUPER_ADMIN" : membership?.role,
+          },
         },
         { status: 200 }
       );
