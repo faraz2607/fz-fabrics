@@ -20,7 +20,16 @@ export const config = {
 export const runtime = "nodejs";
 
 // Routes that require authentication
-const protectedRoutes = ["/dashboard", "/users", "/employee", "/thread", "/bill", "/fabrics", "/members", "/organization-pending"];
+const protectedRoutes = [
+  "/dashboard",
+  "/users",
+  "/employee",
+  "/thread",
+  "/bill",
+  "/fabrics",
+  "/members",
+  "/organization-pending",
+];
 
 // Routes that should redirect to dashboard if already authenticated
 const authRoutes = ["/auth/login", "/auth/signup"];
@@ -28,9 +37,7 @@ const authRoutes = ["/auth/login", "/auth/signup"];
 export async function middleware(request: NextRequest) {
   const sessionId = request.cookies.get("sessionId")?.value;
   const pathname = request.nextUrl.pathname;
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    pathname.startsWith(route)
-  );
+  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
   const isApiRoute = pathname.startsWith("/api/");
   const isAuthApiRoute = pathname.startsWith("/api/auth/");
@@ -45,7 +52,7 @@ export async function middleware(request: NextRequest) {
   if (isApiRoute && !isAuthApiRoute && isAuthenticated && session.organizationActive === false) {
     return NextResponse.json(
       { error: "Your organization is not active yet. Please contact your organization administrator." },
-      { status: 403 }
+      { status: 403 },
     );
   }
 
@@ -54,7 +61,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }
 
-  if (isProtectedRoute && isAuthenticated && session.organizationActive === false && pathname !== "/organization-pending") {
+  if (
+    isProtectedRoute &&
+    isAuthenticated &&
+    session.organizationActive === false &&
+    pathname !== "/organization-pending"
+  ) {
     return NextResponse.redirect(new URL("/organization-pending", request.url));
   }
 
