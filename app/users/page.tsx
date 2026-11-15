@@ -6,6 +6,7 @@ import { useCurrentUser } from "@/lib/useCurrentUser";
 import Dropdown from "@/app/components/Dropdown";
 import Modal from "@/app/components/Modal";
 import ConfirmationModal from "@/app/components/ConfirmationModal";
+import TableSkeleton from "@/app/components/TableSkeleton";
 
 type UserRow = { id: string; name: string; email: string; organizationId?: string; organizationName: string; organizationInviteCode?: string; organizationActive: boolean; organizationStatus: "PENDING" | "ACTIVE" | "INACTIVE"; role: string; active: boolean; passwordResetEnabled: boolean; createdAt: string };
 type Organization = { id: string; name: string; isActive?: boolean | null; activatedAt?: string | null; label?: string };
@@ -197,7 +198,7 @@ export default function UsersPage() {
                 </td>
               </tr>;
             })}
-            {isLoading ? <tr><td colSpan={9} className="px-4 py-10 text-center text-gray-600">Loading users…</td></tr> : rows.length === 0 && <tr><td colSpan={9} className="px-4 py-10 text-center text-gray-600">No users match these filters.</td></tr>}
+            {isLoading ? <tr><td colSpan={9} className="p-0"><TableSkeleton rows={5} cols={9} /></td></tr> : rows.length === 0 && <tr><td colSpan={9} className="px-4 py-10 text-center text-gray-600">No users match these filters.</td></tr>}
           </tbody>
         </table>
       </div>
