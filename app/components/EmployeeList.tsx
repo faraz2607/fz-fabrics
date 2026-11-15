@@ -172,6 +172,7 @@ export default function EmployeeList() {
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-black">Employees</h1>
           <div className="flex flex-wrap gap-2">
             <button
+              data-navigation-path="/fabrics"
               onClick={() => router.push('/fabrics')}
               className="inline-flex items-center rounded-lg bg-green-600 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
             >
@@ -238,6 +239,7 @@ export default function EmployeeList() {
                   {employees.map((employee, idx) => (
                     <tr
                       key={employee.id}
+                      data-navigation-path={`/employee/${employee.id}`}
                       className={`cursor-pointer transition-colors hover:bg-blue-50 ${idx % 2 === 1 ? 'bg-gray-50/60' : 'bg-white'}`}
                       onClick={() => router.push(`/employee/${employee.id}`)}
                     >
