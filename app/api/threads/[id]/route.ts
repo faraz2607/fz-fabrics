@@ -11,6 +11,9 @@ export async function DELETE(
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    if (!user.organizationId) {
+      return NextResponse.json({ error: "Organization not found" }, { status: 403 });
+    }
 
     // Await params to get the id
     const { id: threadId } = await params;
@@ -25,18 +28,12 @@ export async function DELETE(
       return NextResponse.json({ error: "Invalid thread ID format" }, { status: 400 });
     }
 
-    // Verify the thread belongs to the user
-    const thread = await prisma.thread.findUnique({
-      where: { id: threadId },
+    const thread = await prisma.thread.findFirst({
+      where: { id: threadId, organizationId: user.organizationId },
     });
 
     if (!thread) {
       return NextResponse.json({ error: "Thread not found" }, { status: 404 });
-    }
-
-    // Check if thread belongs to the current user
-    if (thread.userId !== user.id) {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
     await prisma.thread.delete({

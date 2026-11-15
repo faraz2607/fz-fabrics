@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/session";
 import { NextRequest, NextResponse } from "next/server";
+import { isValidAmount } from "@/lib/validation";
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,8 +9,12 @@ export async function POST(request: NextRequest) {
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    if (!user.organizationId) {
+      return NextResponse.json({ error: "Organization not found" }, { status: 403 });
+    }
 
-    const { type, color, cost, date } = await request.json();
+    const body = await request.json();
+    const { type, color, cost, date } = body;
 
     if (!type || !color || cost === undefined) {
       return NextResponse.json(
@@ -18,8 +23,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!user.organizationId) {
-      return NextResponse.json({ error: "Organization not found" }, { status: 400 });
+    if (typeof type !== "string" || typeof color !== "string" || !isValidAmount(cost, false)) {
+      return NextResponse.json({ error: "Thread type, color, and a positive cost are required" }, { status: 400 });
     }
 
     const thread = await prisma.thread.create({
@@ -28,7 +33,7 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         type,
         color,
-        cost: parseFloat(cost),
+        cost: Number(cost),
         date: date ? new Date(date) : new Date(),
       },
     });
@@ -43,11 +48,14 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const user = await getSessionUser();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (!user.organizationId) {
+      return NextResponse.json({ error: "Organization not found" }, { status: 403 });
     }
 
     const threads = await prisma.thread.findMany({

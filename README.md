@@ -6,7 +6,7 @@ FabriTrack helps fabric businesses manage organization workspaces, employees, th
 
 Set `SUPER_ADMIN_USER_IDS` in the server environment to a comma-separated list of up to three existing MongoDB user IDs. These accounts receive the global Super Admin role and can manage users across organizations. This role is controlled only by server configuration; it cannot be assigned from signup or the user interface. If more than three IDs are configured, the allowlist is rejected and no account receives Super Admin access. Provision the accounts first, then add their immutable IDs to this server-only setting.
 
-Before deploying these access controls, apply the MongoDB schema updates with `npm run db:push` and regenerate the Prisma client with `npm run prisma:generate`. The additions include user activation and password-reset settings, plus organization activation status.
+Before deploying schema updates, apply them to MongoDB with `npm run db:push` and regenerate the Prisma client with `npm run prisma:generate`. This includes the organization-scoped fabric type change; existing fabric types without an organization are intentionally not visible to any organization and should be recreated in the appropriate workspace.
 
 ## Branding and SEO
 

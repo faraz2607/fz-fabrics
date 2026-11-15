@@ -26,7 +26,7 @@ export default function ThreadPage() {
   const [threadToDelete, setThreadToDelete] = useState<string | null>(null);
   const [threadDetailsToDelete, setThreadDetailsToDelete] = useState<Thread | null>(null);
   const [isLoadingThreads, setIsLoadingThreads] = useState(true);
-  const [threadError, setThreadError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [filterType, setFilterType] = useState<string>("all");
   const [dateRange, setDateRange] = useState<string>("last-month");
@@ -58,28 +58,21 @@ export default function ThreadPage() {
   };
 
   const handleAddThread = async (newThread: Omit<Thread, "id">) => {
-    setThreadError(null);
-    try {
-      const response = await fetch("/api/threads", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newThread),
-      });
-      if (response.ok) {
-        const thread = await response.json();
-        setThreads([...threads, thread]);
-        setShowModal(false);
-      } else {
-        setThreadError("Failed to add thread. Please try again.");
-      }
-    } catch {
-      setThreadError("Failed to add thread. Please try again.");
-    }
+    const response = await fetch("/api/threads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newThread),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Failed to add thread. Please try again.");
+    setThreads((current) => [...current, result]);
+    setShowModal(false);
   };
 
   const handleDeleteThread = (id: string) => {
     const thread = threads.find((t) => t.id === id);
     if (thread) {
+      setDeleteError(null);
       setThreadToDelete(id);
       setThreadDetailsToDelete(thread);
       setShowDeleteConfirm(true);
@@ -93,16 +86,17 @@ export default function ThreadPage() {
       const response = await fetch(`/api/threads/${threadToDelete}`, { method: "DELETE" });
       if (response.ok) {
         setThreads(threads.filter((thread) => thread.id !== threadToDelete));
+        setShowDeleteConfirm(false);
+        setThreadToDelete(null);
+        setThreadDetailsToDelete(null);
       } else {
-        setThreadError("Failed to delete thread. Please try again.");
+        const data = await response.json();
+        setDeleteError(data.error || "Failed to delete thread. Please try again.");
       }
     } catch {
-      setThreadError("Failed to delete thread. Please try again.");
+      setDeleteError("Failed to delete thread. Please try again.");
     } finally {
       setIsDeleting(false);
-      setThreadToDelete(null);
-      setThreadDetailsToDelete(null);
-      setShowDeleteConfirm(false);
     }
   };
 
@@ -214,7 +208,6 @@ export default function ThreadPage() {
       <div className="bg-white rounded-lg sm:rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="px-3 py-2.5 sm:px-5 sm:py-4 border-b border-gray-100">
           <h3 className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wider">Threads List</h3>
-          {threadError && <p className="mt-1.5 sm:mt-2 text-red-600 text-xs bg-red-50 border border-red-200 rounded-lg px-2 py-1.5 sm:px-3 sm:py-2">{threadError}</p>}
         </div>
         <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-16rem)]">
           {isLoadingThreads ? (
@@ -263,12 +256,11 @@ export default function ThreadPage() {
         isOpen={showModal}
         onClose={() => setShowModal(false)}
         onAddThread={handleAddThread}
-        threadTypes={DEFAULT_THREAD_TYPES}
       />
 
       <ConfirmationModal
         isOpen={showDeleteConfirm}
-        onClose={() => { setShowDeleteConfirm(false); setThreadDetailsToDelete(null); }}
+        onClose={() => { setShowDeleteConfirm(false); setThreadDetailsToDelete(null); setThreadToDelete(null); setDeleteError(null); }}
         onConfirm={confirmDeleteThread}
         title="Confirm Deletion"
         message="Are you sure you want to delete this thread? This action cannot be undone."
@@ -276,6 +268,7 @@ export default function ThreadPage() {
         cancelText="Cancel"
         type="danger"
         isLoading={isDeleting}
+        error={deleteError}
         threadDetails={
           threadDetailsToDelete
             ? { type: threadDetailsToDelete.type, color: threadDetailsToDelete.color, date: threadDetailsToDelete.date }

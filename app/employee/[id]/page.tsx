@@ -46,15 +46,6 @@ export default function EmployeeDetailsPage() {
   const [error, setError] = useState<string | null>(null);
   const [unauthorized, setUnauthorized] = useState(false);
 
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editForm, setEditForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    donation: "0",
-  });
-  const [editSubmitting, setEditSubmitting] = useState(false);
-  const [editError, setEditError] = useState<string | null>(null);
   const [fabrics, setFabrics] = useState<Fabric[]>([]);
   const [showAddFabric, setShowAddFabric] = useState(false);
 
@@ -255,49 +246,11 @@ export default function EmployeeDetailsPage() {
     }
   };
 
-  const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!employee) return;
-    setEditSubmitting(true);
-    setEditError(null);
-    try {
-      const res = await fetch(`/api/employees/${employee.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...editForm,
-          donation: parseFloat(editForm.donation) || 0,
-        }),
-      });
-      if (res.ok) {
-        const updated = await res.json();
-        setEmployee(updated);
-        setShowEditModal(false);
-      } else {
-        const data = await res.json();
-        setEditError(data.error || "Failed to update employee");
-      }
-    } catch {
-      setEditError("An error occurred");
-    } finally {
-      setEditSubmitting(false);
-    }
-  };
-
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
-    });
-
-  const formatDateTime = (dateString: string) =>
-    new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     });
 
   if (loading)
@@ -328,10 +281,7 @@ export default function EmployeeDetailsPage() {
       <div className="flex flex-wrap justify-between items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 -ml-1">
-            <div
-              className="flex items-center gap-1.5 cursor-pointer group"
-              onClick={() => router.push("/employee")}
-            >
+            <Link href="/employee" className="flex items-center gap-1.5 group">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -349,36 +299,7 @@ export default function EmployeeDetailsPage() {
               <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-black group-hover:text-blue-800 transition-colors truncate">
                 {employee.name}
               </h1>
-            </div>
-            <button
-              onClick={() => {
-                setEditForm({
-                  name: employee.name,
-                  email: employee.email,
-                  phone: employee.phone || "",
-                  donation: employee.donation?.toString() || "0",
-                });
-                setEditError(null);
-                setShowEditModal(true);
-              }}
-              title="Edit Employee"
-              className="text-gray-400 hover:text-blue-600 transition-colors shrink-0"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={1.8}
-                stroke="currentColor"
-                className="w-4 h-4 sm:w-5 sm:h-5"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125"
-                />
-              </svg>
-            </button>
+            </Link>
           </div>
           <p className="text-gray-600 text-xs sm:text-sm mt-1 wrap-break-word">
             {employee.email}
@@ -499,121 +420,22 @@ export default function EmployeeDetailsPage() {
         </div>
       </div>
       <Modal
-        isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
-        title="Edit Employee"
-      >
-        <form onSubmit={handleEditSubmit} className="space-y-3">
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-              Full Name
-            </label>
-            <input
-              type="text"
-              value={editForm.name}
-              onChange={(e) =>
-                setEditForm((f) => ({
-                  ...f,
-                  name:
-                    e.target.value.charAt(0).toUpperCase() +
-                    e.target.value.slice(1),
-                }))
-              }
-              className="w-full px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              value={editForm.email}
-              onChange={(e) =>
-                setEditForm((f) => ({ ...f, email: e.target.value }))
-              }
-              className="w-full px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-              Phone{" "}
-              <span className="normal-case font-normal text-gray-400">
-                (Optional)
-              </span>
-            </label>
-            <input
-              type="tel"
-              value={editForm.phone}
-              onChange={(e) =>
-                setEditForm((f) => ({ ...f, phone: e.target.value }))
-              }
-              className="w-full px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition"
-              placeholder="Optional"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-              Donation (₹)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={editForm.donation}
-              onChange={(e) =>
-                setEditForm((f) => ({ ...f, donation: e.target.value }))
-              }
-              className="w-full px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition"
-              placeholder="Enter donation amount"
-            />
-          </div>
-          {editError && (
-            <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-2 py-1.5">
-              {editError}
-            </p>
-          )}
-          <div className="flex gap-2 pt-1">
-            <button
-              type="button"
-              onClick={() => setShowEditModal(false)}
-              className="flex-1 px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 text-xs font-semibold hover:bg-gray-50 transition"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={editSubmitting}
-              className="flex-1 px-3 py-1.5 rounded-lg bg-linear-to-r from-blue-600 to-indigo-600 text-white text-xs font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-sm transition disabled:opacity-50"
-            >
-              {editSubmitting ? "Saving..." : "Save Changes"}
-            </button>
-          </div>
-        </form>
-      </Modal>
-
-      <Modal
         isOpen={showAddFabric}
         onClose={() => setShowAddFabric(false)}
         title="Add Fabric"
       >
         <AddFabricForm
           onAdd={async (fabric: Fabric) => {
-            try {
-              if (!employee) throw new Error();
-              const res = await fetch(`/api/employees/${employee.id}/fabrics`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(fabric),
-              });
-              if (res.ok) {
-                const saved = await res.json();
-                setFabrics((prev) => [...prev, saved]);
-                setShowAddFabric(false);
-              }
-            } catch {}
+            if (!employee) throw new Error("Employee could not be loaded.");
+            const res = await fetch(`/api/employees/${employee.id}/fabrics`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(fabric),
+            });
+            const result = await res.json();
+            if (!res.ok) throw new Error(result.error || "Failed to add fabric.");
+            setFabrics((prev) => [...prev, result]);
+            setShowAddFabric(false);
           }}
         />
       </Modal>
@@ -647,13 +469,12 @@ export default function EmployeeDetailsPage() {
               Amount to Pay
             </label>
             <input
-              type="number"
-              min="0"
-              step="0.01"
+              type="text"
+              inputMode="decimal"
               placeholder="Enter amount paid"
               value={payInput}
               onChange={(e) => {
-                setPayInput(e.target.value);
+                if (/^\d*(?:\.\d{0,2})?$/.test(e.target.value)) setPayInput(e.target.value);
                 setPayError(null);
               }}
               className="w-full px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition"

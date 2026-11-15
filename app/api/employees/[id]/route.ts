@@ -1,38 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSessionUser, validateSession } from '@/lib/session';
+import { getSessionUser } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
+import { isValidAmount, isValidPhoneNumber } from '@/lib/validation';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const cookieStore = await import('next/headers').then(m => m.cookies());
-    const sessionId = cookieStore.get("sessionId")?.value;
-
-    if (!sessionId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { valid, userId } = await validateSession(sessionId);
-    
-    if (!valid || !userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Await the params to get the actual id
+    const user = await getSessionUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!user.organizationId) return NextResponse.json({ error: 'Organization not found' }, { status: 403 });
     const { id } = await params;
 
-    const organizationId = (await prisma.organizationMember.findFirst({
-      where: { userId },
-      select: { organizationId: true },
-    }))?.organizationId;
-
     const employee = await prisma.employee.findFirst({
-      where: {
-        id,
-        organizationId,
-      }
+      where: { id, organizationId: user.organizationId }
     });
 
     if (!employee) {
@@ -54,53 +36,39 @@ export async function PUT(
     const actor = await getSessionUser();
     if (!actor) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (actor.role !== 'ADMIN' && actor.role !== 'SUPER_ADMIN') return NextResponse.json({ error: 'Only admins can edit employees' }, { status: 403 });
-    const cookieStore = await import('next/headers').then(m => m.cookies());
-    const sessionId = cookieStore.get("sessionId")?.value;
-
-    if (!sessionId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { valid, userId } = await validateSession(sessionId);
-    
-    if (!valid || !userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    if (!actor.organizationId) return NextResponse.json({ error: 'Organization not found' }, { status: 403 });
 
     const body = await request.json();
     const { name, email, phone, donation } = body;
 
-    // Validate required fields
-    if (!name || !email) {
+    if (typeof name !== 'string' || !name.trim() || typeof email !== 'string' || !email.trim()) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
-
-    // Await the params to get the actual id
+    if (!isValidPhoneNumber(phone)) {
+      return NextResponse.json({ error: 'Phone number must contain exactly 10 digits' }, { status: 400 });
+    }
     const { id } = await params;
 
-    const organizationId = (await prisma.organizationMember.findFirst({
-      where: { userId },
-      select: { organizationId: true },
-    }))?.organizationId;
-
-    // Check if employee exists and belongs to the organization
     const existingEmployee = await prisma.employee.findFirst({
-      where: {
-        id,
-        organizationId,
-      }
+      where: { id, organizationId: actor.organizationId }
     });
 
     if (!existingEmployee) {
       return NextResponse.json({ error: 'Employee not found' }, { status: 404 });
     }
+    const donationAmount = donation === undefined || donation === null || donation === ''
+      ? existingEmployee.donation
+      : donation;
+    if (!isValidAmount(donationAmount)) {
+      return NextResponse.json({ error: 'Donation must be a non-negative amount with up to 2 decimal places' }, { status: 400 });
+    }
 
     // Check if email is already taken by another employee
     const emailExists = await prisma.employee.findFirst({
       where: {
-        email,
+        email: email.trim(),
         id: { not: id },
-        organizationId,
+        organizationId: actor.organizationId,
       }
     });
 
@@ -113,10 +81,10 @@ export async function PUT(
         id,
       },
       data: {
-        name,
-        email,
-        phone,
-        donation: donation !== undefined ? donation : existingEmployee.donation
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone || null,
+        donation: Number(donationAmount)
       }
     });
 
@@ -135,33 +103,11 @@ export async function DELETE(
     const actor = await getSessionUser();
     if (!actor) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     if (actor.role !== 'ADMIN' && actor.role !== 'SUPER_ADMIN') return NextResponse.json({ error: 'Only admins can delete employees' }, { status: 403 });
-    const cookieStore = await import('next/headers').then(m => m.cookies());
-    const sessionId = cookieStore.get("sessionId")?.value;
-
-    if (!sessionId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { valid, userId } = await validateSession(sessionId);
-    
-    if (!valid || !userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Await the params to get the actual id
+    if (!actor.organizationId) return NextResponse.json({ error: 'Organization not found' }, { status: 403 });
     const { id } = await params;
 
-    const organizationId = (await prisma.organizationMember.findFirst({
-      where: { userId },
-      select: { organizationId: true },
-    }))?.organizationId;
-
-    // Check if employee exists and belongs to the organization
     const existingEmployee = await prisma.employee.findFirst({
-      where: {
-        id,
-        organizationId,
-      }
+      where: { id, organizationId: actor.organizationId }
     });
 
     if (!existingEmployee) {

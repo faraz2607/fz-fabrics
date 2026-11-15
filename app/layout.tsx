@@ -56,10 +56,10 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-inter">
+      <body className="min-h-full flex flex-col pb-5 font-inter">
         <TabHeader />
         <LayoutWrapper>{children}</LayoutWrapper>
-        <footer className="p-1 pl-2 absolute bottom-1 flex justify-end items-center bg-gray-900 right-0 rounded-l-md">
+        <footer className="fixed bottom-1 right-0 z-40 flex items-center rounded-l-md bg-gray-900 p-1 pl-2">
           <span className="text-[9px] font-medium text-gray-400">Created By Faraz Ahmad</span>
         </footer>
       </body>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useCurrentUser } from "@/lib/useCurrentUser";
 import Dropdown from "@/app/components/Dropdown";
 import CustomDateRangePicker from "@/app/components/CustomDateRangePicker";
@@ -25,6 +25,11 @@ interface EmployeeEarning {
   count: number;
 }
 
+interface EmployeeOption {
+  id: string;
+  name: string;
+}
+
 export default function DashboardPage() {
   const { user, loading } = useCurrentUser();
   const [threads, setThreads] = useState<Thread[]>([]);
@@ -34,7 +39,7 @@ export default function DashboardPage() {
   interface FabricCount { type: string; count: number; }
   const [fabricCounts, setFabricCounts] = useState<FabricCount[]>([]);
   const [fabricCountsLoading, setFabricCountsLoading] = useState(false);
-  const [employeesList, setEmployeesList] = useState<{ id: string; name: string }[]>([]);
+  const [employeesList, setEmployeesList] = useState<EmployeeOption[]>([]);
   const [fabricCountsEmployeeId, setFabricCountsEmployeeId] = useState<string>("all");
 
   const [isLoadingThreads, setIsLoadingThreads] = useState(true);
@@ -78,7 +83,7 @@ export default function DashboardPage() {
     } catch { setEarnings([]); } finally { setEarningsLoading(false); }
   };
 
-  const fetchFabricCounts = async (start: string, end: string) => {
+  const fetchFabricCounts = useCallback(async (start: string, end: string) => {
     setFabricCountsLoading(true);
     try {
       let url = `/api/fabric-counts?start=${start}&end=${end}`;
@@ -88,7 +93,7 @@ export default function DashboardPage() {
       const res = await fetch(url);
       if (res.ok) setFabricCounts(await res.json());
     } catch { setFabricCounts([]); } finally { setFabricCountsLoading(false); }
-  };
+  }, [fabricCountsEmployeeId]);
 
   const handleFabricCountsFilter = (type: string, start?: string, end?: string) => {
     setFabricCountsDateRange(type);
@@ -130,15 +135,15 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (fabricCountsStart && fabricCountsEnd) fetchFabricCounts(fabricCountsStart, fabricCountsEnd);
-  }, [fabricCountsStart, fabricCountsEnd, fabricCountsEmployeeId]);
+  }, [fabricCountsStart, fabricCountsEnd, fetchFabricCounts]);
 
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
         const res = await fetch("/api/employees");
         if (res.ok) {
-          const data = await res.json();
-          setEmployeesList(data.map((e: any) => ({ id: e.id, name: e.name })));
+          const data: EmployeeOption[] = await res.json();
+          setEmployeesList(data);
         }
       } catch (err) {
         console.error("Failed to fetch employees", err);

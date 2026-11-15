@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Modal from './Modal';
 
 interface EmployeeFormProps {
   employee?: {
@@ -38,6 +37,14 @@ export default function EmployeeForm({ employee, onSuccess, onCancel }: Employee
       newErrors.email = 'Email is invalid';
     }
 
+    if (formData.phone && !/^\d{10}$/.test(formData.phone)) {
+      newErrors.phone = 'Phone number must contain exactly 10 digits';
+    }
+
+    if (formData.donation !== '' && (!/^\d+(?:\.\d{0,2})?$/.test(formData.donation) || Number(formData.donation) < 0)) {
+      newErrors.donation = 'Enter a valid non-negative amount';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -72,7 +79,7 @@ export default function EmployeeForm({ employee, onSuccess, onCancel }: Employee
         const errorData = await response.json();
         setErrors({ submit: errorData.error || 'An error occurred' });
       }
-    } catch (error) {
+    } catch {
       setErrors({ submit: 'An error occurred while saving' });
     } finally {
       setIsSubmitting(false);
@@ -81,7 +88,11 @@ export default function EmployeeForm({ employee, onSuccess, onCancel }: Employee
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    const formatted = name === 'name'
+    const formatted = name === 'phone'
+      ? value.replace(/\D/g, '').slice(0, 10)
+      : name === 'donation' && !/^\d*(?:\.\d{0,2})?$/.test(value)
+        ? formData.donation
+        : name === 'name'
       ? value.charAt(0).toUpperCase() + value.slice(1)
       : value;
     setFormData(prev => ({
@@ -132,19 +143,23 @@ export default function EmployeeForm({ employee, onSuccess, onCancel }: Employee
         <input
           type="tel" id="phone" name="phone"
           value={formData.phone} onChange={handleChange}
-          className={inputClass()}
-          placeholder="Enter employee phone number"
+          className={inputClass(!!errors.phone)}
+          placeholder="Enter 10-digit phone number"
+          inputMode="numeric"
+          maxLength={10}
         />
+        {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone}</p>}
       </div>
 
       <div>
         <label htmlFor="donation" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Donation (₹)</label>
         <input
-          type="number" id="donation" name="donation" step="0.01" min="0"
+          type="text" inputMode="decimal" id="donation" name="donation"
           value={formData.donation} onChange={handleChange}
-          className={inputClass()}
-          placeholder="Enter donation amount"
+          className={inputClass(!!errors.donation)}
+          placeholder="Enter weekly donation amount"
         />
+        {errors.donation && <p className="mt-1 text-xs text-red-600">{errors.donation}</p>}
       </div>
 
       {errors.submit && <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-2 py-1.5">{errors.submit}</p>}

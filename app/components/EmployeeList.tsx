@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import EmployeeForm from './EmployeeForm';
 import ConfirmationModal from './ConfirmationModal';
 import Modal from './Modal';
@@ -25,6 +26,7 @@ interface Employee {
 
 export default function EmployeeList() {
   const { user } = useCurrentUser();
+  const router = useRouter();
   const canManageEmployees = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +35,7 @@ export default function EmployeeList() {
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [deletingEmployee, setDeletingEmployee] = useState<Employee | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   // Fabric type popup state
   const [showFabricTypeModal, setShowFabricTypeModal] = useState(false);
   const [fabricTypes, setFabricTypes] = useState<FabricType[]>([]);
@@ -119,6 +122,7 @@ export default function EmployeeList() {
   };
 
   const handleDeleteEmployee = (employee: Employee) => {
+    setDeleteError(null);
     setDeletingEmployee(employee);
   };
 
@@ -134,15 +138,15 @@ export default function EmployeeList() {
 
       if (response.ok) {
         setEmployees(prev => prev.filter(emp => emp.id !== deletingEmployee.id));
+        setDeletingEmployee(null);
       } else {
         const errorData = await response.json();
-        setError(errorData.error || 'Failed to delete employee');
+        setDeleteError(errorData.error || 'Failed to delete employee');
       }
-    } catch (err) {
-      setError('An error occurred while deleting the employee');
+    } catch {
+      setDeleteError('An error occurred while deleting the employee');
     } finally {
       setIsSubmitting(false);
-      setDeletingEmployee(null);
     }
   };
 
@@ -168,7 +172,7 @@ export default function EmployeeList() {
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-black">Employees</h1>
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => window.location.assign('/fabrics')}
+              onClick={() => router.push('/fabrics')}
               className="inline-flex items-center rounded-lg bg-green-600 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
             >
               Manage Fabrics
@@ -190,7 +194,7 @@ export default function EmployeeList() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Cost (₹)</label>
-              <input ref={fabricCostRef} type="number" min={1} placeholder="Enter cost" className="w-full px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition" required />
+              <input ref={fabricCostRef} type="text" inputMode="decimal" placeholder="Enter cost" className="w-full px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition" required />
             </div>
             {fabricTypeError && <div className="flex items-center gap-2 text-red-600 text-xs bg-red-50 border border-red-200 rounded-lg px-2 py-1.5 sm:px-3 sm:py-2">{fabricTypeError}</div>}
             <div className="flex gap-2 sm:gap-3 pt-1">
@@ -235,7 +239,7 @@ export default function EmployeeList() {
                     <tr
                       key={employee.id}
                       className={`cursor-pointer transition-colors hover:bg-blue-50 ${idx % 2 === 1 ? 'bg-gray-50/60' : 'bg-white'}`}
-                      onClick={() => window.location.assign(`/employee/${employee.id}`)}
+                      onClick={() => router.push(`/employee/${employee.id}`)}
                     >
                       <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm font-semibold text-gray-900">{employee.name}</td>
                       <td className="px-3 py-2 sm:px-4 sm:py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500">{employee.email}</td>
@@ -280,7 +284,7 @@ export default function EmployeeList() {
         {/* Delete Confirmation Modal */}
         <ConfirmationModal
           isOpen={!!deletingEmployee}
-          onClose={() => setDeletingEmployee(null)}
+          onClose={() => { setDeletingEmployee(null); setDeleteError(null); }}
           onConfirm={handleConfirmDelete}
           title="Delete Employee"
           message={`Are you sure you want to delete ${deletingEmployee?.name}? This action cannot be undone.`}
@@ -288,6 +292,7 @@ export default function EmployeeList() {
           cancelText="Cancel"
           type="danger"
           isLoading={isSubmitting}
+          error={deleteError}
         />
     </div>
   );

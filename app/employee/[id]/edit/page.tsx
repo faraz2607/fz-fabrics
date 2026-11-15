@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useRouter as useNextRouter } from 'next/router';
 import Link from 'next/link';
 
 interface Employee {
@@ -66,12 +65,16 @@ export default function EmployeeEditPage() {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: name === 'phone' ? value.replace(/\D/g, '').slice(0, 10) : value
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.phone && !/^\d{10}$/.test(formData.phone)) {
+      setError('Phone number must contain exactly 10 digits');
+      return;
+    }
     setIsSubmitting(true);
     setError(null);
 
@@ -90,7 +93,7 @@ export default function EmployeeEditPage() {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to update employee');
       }
-    } catch (err) {
+    } catch {
       setError('An error occurred while updating the employee');
     } finally {
       setIsSubmitting(false);
@@ -139,7 +142,7 @@ export default function EmployeeEditPage() {
         <div className="mx-auto max-w-4xl bg-white p-8 shadow rounded-lg border border-gray-200">
           <div className="text-center py-12">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Employee Not Found</h2>
-            <p className="text-gray-600 mb-8">The employee you're looking for doesn't exist or may have been deleted.</p>
+            <p className="text-gray-600 mb-8">The employee you are looking for does not exist or may have been deleted.</p>
             <Link 
               href="/employee" 
               className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
@@ -210,6 +213,8 @@ export default function EmployeeEditPage() {
                 name="phone"
                 value={formData.phone}
                 onChange={handleInputChange}
+                inputMode="numeric"
+                maxLength={10}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                 placeholder="Optional"
               />

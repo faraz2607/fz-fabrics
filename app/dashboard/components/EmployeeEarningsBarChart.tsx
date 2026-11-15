@@ -38,7 +38,7 @@ export default function EmployeeEarningsBarChart({ data }: { data: EmployeeEarni
   }
 
   const chartData = {
-    labels: sorted.map((e) => e.employeeName.split(' ')[0]),
+    labels: sorted.map((e) => e.employeeName),
     datasets: [
       {
         label: "Earning (₹)",

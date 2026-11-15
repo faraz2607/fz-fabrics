@@ -29,6 +29,7 @@ export default function UsersPage() {
   const [error, setError] = useState("");
   const [editingUser, setEditingUser] = useState<UserRow | null>(null);
   const [deletingUser, setDeletingUser] = useState<UserRow | null>(null);
+  const [deleteError, setDeleteError] = useState("");
   const [showChangeConfirmation, setShowChangeConfirmation] = useState(false);
   const [editName, setEditName] = useState("");
   const [editOrganizationId, setEditOrganizationId] = useState("");
@@ -131,7 +132,7 @@ export default function UsersPage() {
   const deleteUser = async () => {
     if (!deletingUser) return;
     setBusyId(deletingUser.id);
-    setError("");
+    setDeleteError("");
     try {
       const response = await fetch(`/api/users?userId=${encodeURIComponent(deletingUser.id)}`, { method: "DELETE" });
       const data = await response.json();
@@ -140,8 +141,7 @@ export default function UsersPage() {
       if (rows.length === 1 && page > 1) setPage((current) => current - 1);
       else await load();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Delete failed");
-      setDeletingUser(null);
+      setDeleteError(cause instanceof Error ? cause.message : "Delete failed");
     } finally {
       setBusyId("");
     }
@@ -192,7 +192,7 @@ export default function UsersPage() {
                 <td className="whitespace-nowrap px-4 py-3">
                   {row.role === "SUPER_ADMIN" ? <span className="text-xs text-gray-500">Protected</span> : <div className="flex items-center gap-3">
                     <button disabled={busyId === row.id} onClick={() => openEdit(row)} className="text-sm font-semibold text-indigo-700 hover:text-indigo-900 disabled:opacity-50">Edit</button>
-                    <button disabled={busyId === row.id} onClick={() => setDeletingUser(row)} className="text-sm font-semibold text-red-700 hover:text-red-900 disabled:opacity-50">Delete</button>
+                    <button disabled={busyId === row.id} onClick={() => { setDeleteError(""); setDeletingUser(row); }} className="text-sm font-semibold text-red-700 hover:text-red-900 disabled:opacity-50">Delete</button>
                   </div>}
                 </td>
               </tr>;
@@ -249,6 +249,6 @@ export default function UsersPage() {
     </Modal>
 
     <ConfirmationModal isOpen={showChangeConfirmation} onClose={() => setShowChangeConfirmation(false)} onConfirm={() => { setShowChangeConfirmation(false); void persistUser(); }} title="Confirm user changes" message={`Apply these changes for ${editingUser?.name}? ${roleStatusChanges}`} confirmText="Confirm changes" isLoading={!!editingUser && busyId === editingUser.id} type="warning" />
-    <ConfirmationModal isOpen={!!deletingUser} onClose={() => setDeletingUser(null)} onConfirm={deleteUser} title="Delete user" message={`Permanently delete ${deletingUser?.name} and their account data?`} confirmText="Delete user" isLoading={!!deletingUser && busyId === deletingUser.id} />
+    <ConfirmationModal isOpen={!!deletingUser} onClose={() => { setDeletingUser(null); setDeleteError(""); }} onConfirm={deleteUser} title="Delete user" message={`Permanently delete ${deletingUser?.name} and their account data?`} confirmText="Delete user" isLoading={!!deletingUser && busyId === deletingUser.id} error={deleteError} />
   </>;
 }

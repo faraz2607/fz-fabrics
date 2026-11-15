@@ -20,21 +20,20 @@ interface Thread {
 interface AddThreadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddThread: (thread: Omit<Thread, "id">) => void;
-  threadTypes: string[];
+  onAddThread: (thread: Omit<Thread, "id">) => Promise<void>;
 }
 
 export default function AddThreadModal({
   isOpen,
   onClose,
   onAddThread,
-  threadTypes,
 }: AddThreadModalProps) {
   const [threadType, setThreadType] = useState(DEFAULT_THREAD_TYPES[0]);
   const [color, setColor] = useState(AVAILABLE_COLORS[0]);
   const [cost, setCost] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [error, setError] = useState<string>("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Clear error when modal closes
   useEffect(() => {
@@ -43,28 +42,34 @@ export default function AddThreadModal({
     }
   }, [isOpen]);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
 
-    if (!cost || isNaN(parseFloat(cost)) || parseFloat(cost) < 0) {
-      setError("Please enter a valid cost amount");
+    if (!/^\d+(?:\.\d{1,2})?$/.test(cost) || !Number.isFinite(Number(cost)) || Number(cost) <= 0) {
+      setError("Please enter a positive cost using digits only");
       return;
     }
 
-    onAddThread({
-      type: threadType,
-      color: color,
-      cost: parseFloat(cost),
-      date: new Date(date).toISOString(),
-    });
+    setIsSubmitting(true);
+    try {
+      await onAddThread({
+        type: threadType,
+        color: color,
+        cost: Number(cost),
+        date: new Date(date).toISOString(),
+      });
 
-    // Reset form
-    setThreadType(DEFAULT_THREAD_TYPES[0]);
-    setColor(AVAILABLE_COLORS[0]);
-    setCost("");
-    setDate(new Date().toISOString().split('T')[0]);
-    setError("");
+      setThreadType(DEFAULT_THREAD_TYPES[0]);
+      setColor(AVAILABLE_COLORS[0]);
+      setCost("");
+      setDate(new Date().toISOString().split('T')[0]);
+      setError("");
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "Failed to add thread. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const threadTypeOptions = DEFAULT_THREAD_TYPES.map((type) => ({
@@ -117,12 +122,12 @@ export default function AddThreadModal({
             Cost (₹)
           </label>
           <input
-            type="number"
+            type="text"
+            inputMode="decimal"
             step="0.01"
-            min="0.01"
             value={cost}
             onChange={(e) => {
-              setCost(e.target.value);
+              if (/^\d*(?:\.\d{0,2})?$/.test(e.target.value)) setCost(e.target.value);
               if (error) setError("");
             }}
             placeholder="Enter cost amount"
@@ -152,15 +157,17 @@ export default function AddThreadModal({
           <button
             type="button"
             onClick={onClose}
+            disabled={isSubmitting}
             className="flex-1 px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 text-xs font-semibold hover:bg-gray-50 transition"
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="flex-1 px-3 py-1.5 rounded-lg bg-linear-to-r from-blue-600 to-indigo-600 text-white text-xs font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-sm transition"
+            disabled={isSubmitting}
+            className="flex-1 px-3 py-1.5 rounded-lg bg-linear-to-r from-blue-600 to-indigo-600 text-white text-xs font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-sm transition disabled:opacity-50"
           >
-            Add Thread
+            {isSubmitting ? "Adding…" : "Add Thread"}
           </button>
         </div>
       </form>
