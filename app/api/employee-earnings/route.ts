@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getSessionUser } from "@/lib/session";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -7,19 +8,13 @@ export async function GET(req: NextRequest) {
   const end = searchParams.get("end");
 
   try {
-    const sessionId = req.cookies.get("sessionId")?.value;
-    if (!sessionId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const user = await getSessionUser();
+    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (!user.organizationId) return NextResponse.json({ error: "Organization not found" }, { status: 403 });
 
-    const { validateSession } = await import("@/lib/session");
-    const session = await validateSession(sessionId);
-    if (!session.valid || !session.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-    const membership = await prisma.organizationMember.findFirst({
-      where: { userId: session.userId },
-      select: { organizationId: true },
-    });
-
-    const where: any = { organizationId: membership?.organizationId };
+    const where: { organizationId: string; createdAt?: { gte: Date; lte: Date } } = {
+      organizationId: user.organizationId,
+    };
     if (start && end) {
       where.createdAt = { gte: new Date(start), lte: new Date(end) };
     }
@@ -31,7 +26,7 @@ export async function GET(req: NextRequest) {
     });
 
     const employees = await prisma.employee.findMany({
-      where: { id: { in: grouped.map((g) => g.employeeId) } },
+      where: { id: { in: grouped.map((g) => g.employeeId) }, organizationId: user.organizationId },
       select: { id: true, name: true },
     });
 

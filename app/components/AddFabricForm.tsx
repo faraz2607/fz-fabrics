@@ -15,7 +15,7 @@ interface FabricType {
 
 
 interface AddFabricFormProps {
-  onAdd: (fabric: Fabric) => void;
+  onAdd: (fabric: Fabric) => Promise<void>;
 }
 
 
@@ -25,6 +25,9 @@ export default function AddFabricForm({ onAdd }: AddFabricFormProps) {
   const [count, setCount] = useState("");
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [fabricTypes, setFabricTypes] = useState<FabricType[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -32,10 +35,11 @@ export default function AddFabricForm({ onAdd }: AddFabricFormProps) {
     const fetchTypes = async () => {
       try {
         const res = await fetch('/api/fabrics');
-        if (res.ok) {
-          setFabricTypes(await res.json());
-        }
-      } catch {}
+        if (!res.ok) throw new Error('Failed to load fabric types');
+        setFabricTypes(await res.json());
+      } catch {
+        setLoadError('Failed to load fabric types. Please try again.');
+      }
     };
     fetchTypes();
   }, []);
@@ -59,16 +63,28 @@ export default function AddFabricForm({ onAdd }: AddFabricFormProps) {
     setIsOpen(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const costNum = parseFloat(cost);
     const countNum = parseInt(count);
-    if (!type || isNaN(costNum) || costNum <= 0 || isNaN(countNum) || countNum <= 0) return;
-    onAdd({ type, cost: costNum, count: countNum, createdAt: date ? new Date(date).toISOString() : undefined });
-    setType("");
-    setCost("");
-    setCount("");
-    setDate(new Date().toISOString().slice(0, 10));
+    if (!type || !/^\d+(?:\.\d{1,2})?$/.test(cost) || isNaN(costNum) || costNum <= 0 ||
+      !/^\d+$/.test(count) || isNaN(countNum) || countNum <= 0) {
+      setSubmitError('Enter a positive cost and count using digits only.');
+      return;
+    }
+    setIsSubmitting(true);
+    setSubmitError(null);
+    try {
+      await onAdd({ type, cost: costNum, count: countNum, createdAt: date ? new Date(date).toISOString() : undefined });
+      setType("");
+      setCost("");
+      setCount("");
+      setDate(new Date().toISOString().slice(0, 10));
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Failed to add fabric.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -149,12 +165,14 @@ export default function AddFabricForm({ onAdd }: AddFabricFormProps) {
       <div>
         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Cost (₹)</label>
         <input
-          type="number"
+          type="text"
+          inputMode="decimal"
           value={cost}
-          onChange={e => setCost(e.target.value)}
+          onChange={e => {
+            if (/^\d*(?:\.\d{0,2})?$/.test(e.target.value)) setCost(e.target.value);
+          }}
           placeholder="Auto-filled from fabric type"
           className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition disabled:opacity-60 disabled:cursor-not-allowed"
-          min={1}
           required
           readOnly={!!type}
         />
@@ -162,12 +180,14 @@ export default function AddFabricForm({ onAdd }: AddFabricFormProps) {
       <div>
         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Count</label>
         <input
-          type="number"
+          type="text"
+          inputMode="numeric"
           value={count}
-          onChange={e => setCount(e.target.value)}
+          onChange={e => {
+            if (/^\d*$/.test(e.target.value)) setCount(e.target.value);
+          }}
           placeholder="Enter count"
           className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition"
-          min={1}
           required
         />
       </div>
@@ -181,11 +201,17 @@ export default function AddFabricForm({ onAdd }: AddFabricFormProps) {
           required
         />
       </div>
+      {(loadError || submitError) && (
+        <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+          {submitError || loadError}
+        </p>
+      )}
       <button
         type="submit"
-        className="w-full px-4 py-2.5 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-sm transition"
+        disabled={isSubmitting || !!loadError}
+        className="w-full px-4 py-2.5 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 text-white text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50"
       >
-        Add Fabric
+        {isSubmitting ? 'Adding Fabric…' : 'Add Fabric'}
       </button>
     </form>
   );

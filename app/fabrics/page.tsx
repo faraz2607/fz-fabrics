@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Modal from "../components/Modal";
 import ConfirmationModal from "../components/ConfirmationModal";
 import TableSkeleton from "../components/TableSkeleton";
@@ -21,10 +21,10 @@ export default function FabricListPage() {
   const [editFabric, setEditFabric] = useState<FabricType | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [form, setForm] = useState({ type: "", cost: "" });
   const [formError, setFormError] = useState<string | null>(null);
-
-  const router = useRouter();
 
   const fetchFabrics = async () => {
     setLoading(true);
@@ -58,22 +58,19 @@ export default function FabricListPage() {
     setShowAddModal(true);
   };
 
-  const handleDelete = (id: string) => {
-    setDeleteId(id);
-  };
-
   const confirmDelete = async () => {
     if (!deleteId) return;
     setIsDeleting(true);
     try {
       const res = await fetch(`/api/fabrics/${deleteId}`, { method: "DELETE" });
-      if (!res.ok) throw new Error();
-      fetchFabrics();
-    } catch {
-      setError("Failed to delete fabric type.");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete fabric type.");
+      setDeleteId(null);
+      await fetchFabrics();
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error.message : "Failed to delete fabric type.");
     } finally {
       setIsDeleting(false);
-      setDeleteId(null);
     }
   };
 
@@ -82,10 +79,11 @@ export default function FabricListPage() {
     setFormError(null);
     const type = form.type.trim();
     const cost = parseFloat(form.cost);
-    if (!type || isNaN(cost) || cost <= 0) {
+    if (!type || !/^\d+(?:\.\d{1,2})?$/.test(form.cost) || isNaN(cost) || cost <= 0) {
       setFormError("Type and cost are required and cost must be positive.");
       return;
     }
+    setIsSaving(true);
     try {
       let res;
       if (editFabric) {
@@ -110,16 +108,15 @@ export default function FabricListPage() {
       fetchFabrics();
     } catch {
       setFormError("Failed to save fabric type.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
   return (
     <div className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-gray-200 p-3 sm:p-6">
       <div className="flex flex-wrap justify-between items-center gap-3 mb-4 sm:mb-6">
-        <div
-          className="flex items-center gap-1.5 sm:gap-2 cursor-pointer group"
-          onClick={() => router.push("/employee")}
-        >
+        <Link href="/employee" className="flex items-center gap-1.5 sm:gap-2 group">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -137,7 +134,7 @@ export default function FabricListPage() {
           <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 group-hover:text-blue-800 transition-colors">
             Manage Fabrics
           </h1>
-        </div>
+        </Link>
         <button
           className="inline-flex items-center rounded-lg bg-blue-600 px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-blue-700"
           onClick={handleOpenAdd}
@@ -196,7 +193,10 @@ export default function FabricListPage() {
                       </button>
                       <button
                         className="text-red-500 hover:text-red-700 font-medium"
-                        onClick={() => setDeleteId(fabric.id)}
+                        onClick={() => {
+                          setDeleteError(null);
+                          setDeleteId(fabric.id);
+                        }}
                       >
                         Delete
                       </button>
@@ -210,7 +210,7 @@ export default function FabricListPage() {
       </div>
       <ConfirmationModal
         isOpen={!!deleteId}
-        onClose={() => setDeleteId(null)}
+        onClose={() => { setDeleteId(null); setDeleteError(null); }}
         onConfirm={confirmDelete}
         title="Delete Fabric"
         message="Are you sure you want to delete this fabric type? This action cannot be undone."
@@ -218,6 +218,7 @@ export default function FabricListPage() {
         cancelText="Cancel"
         type="danger"
         isLoading={isDeleting}
+        error={deleteError}
       />
       <Modal
         isOpen={showAddModal}
@@ -251,13 +252,16 @@ export default function FabricListPage() {
               Cost (₹)
             </label>
             <input
-              type="number"
-              step="0.01"
+              type="text"
+              inputMode="decimal"
               value={form.cost}
-              onChange={(e) => setForm((f) => ({ ...f, cost: e.target.value }))}
+              onChange={(e) => {
+                if (/^\d*(?:\.\d{0,2})?$/.test(e.target.value)) {
+                  setForm((f) => ({ ...f, cost: e.target.value }));
+                }
+              }}
               placeholder="Enter cost"
               className="w-full px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg border border-gray-200 bg-gray-50 text-gray-900 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition"
-              min={0.01}
               required
             />
           </div>
@@ -276,9 +280,10 @@ export default function FabricListPage() {
             </button>
             <button
               type="submit"
-              className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg bg-linear-to-r from-blue-600 to-indigo-600 text-white text-xs sm:text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-sm transition"
+              disabled={isSaving}
+              className="flex-1 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg bg-linear-to-r from-blue-600 to-indigo-600 text-white text-xs sm:text-sm font-semibold hover:from-blue-700 hover:to-indigo-700 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {editFabric ? "Update" : "Add"} Fabric
+              {isSaving ? "Saving…" : `${editFabric ? "Update" : "Add"} Fabric`}
             </button>
           </div>
         </form>

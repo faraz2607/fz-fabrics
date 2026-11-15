@@ -16,6 +16,7 @@ interface ConfirmationModalProps {
     date: string;
   };
   isLoading?: boolean;
+  error?: string | null;
 }
 
 export default function ConfirmationModal({
@@ -29,6 +30,7 @@ export default function ConfirmationModal({
   type = "danger",
   threadDetails,
   isLoading = false,
+  error,
 }: ConfirmationModalProps) {
   const getButtonStyles = () => {
     switch (type) {
@@ -83,6 +85,12 @@ export default function ConfirmationModal({
               </div>
             </div>
           </div>
+        )}
+
+        {error && (
+          <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+            {error}
+          </p>
         )}
         
         <div className="flex gap-2 pt-2">

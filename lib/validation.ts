@@ -1,5 +1,27 @@
 // Email validation regex
 export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const AMOUNT_INPUT_REGEX = /^\d+(?:\.\d{1,2})?$/;
+
+export function isValidAmount(value: unknown, allowZero = true): boolean {
+  if (typeof value !== "number" && typeof value !== "string") return false;
+  const parsed = typeof value === "number" ? value : AMOUNT_INPUT_REGEX.test(value) ? Number(value) : NaN;
+  const hasAtMostTwoDecimals = Math.abs(parsed * 100 - Math.round(parsed * 100)) < 1e-8;
+  return Number.isFinite(parsed) && hasAtMostTwoDecimals && (allowZero ? parsed >= 0 : parsed > 0);
+}
+
+export function isValidPhoneNumber(value: unknown): boolean {
+  return value === undefined || value === null || value === "" ||
+    (typeof value === "string" && /^\d{10}$/.test(value));
+}
+
+export function isValidPositiveInteger(value: unknown): boolean {
+  const parsed = typeof value === "number"
+    ? value
+    : typeof value === "string" && /^\d+$/.test(value)
+      ? Number(value)
+      : NaN;
+  return Number.isSafeInteger(parsed) && parsed > 0;
+}
 
 // Password requirements
 export const PASSWORD_MIN_LENGTH = 8;

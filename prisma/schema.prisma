@@ -41,6 +41,7 @@ model Organization {
   threads       Thread[]
   employees     Employee[]
   fabrics       Fabric[]
+  fabricTypes   FabricType[]
   payments      Payment[]
 }
 
@@ -136,11 +137,16 @@ model Fabric {
 }
 
 model FabricType {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  type      String   @unique
-  cost      Float
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String       @db.ObjectId
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  type           String
+  cost           Float
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([organizationId, type])
+  @@index([organizationId])
 }
 
 model Payment {

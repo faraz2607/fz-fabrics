@@ -1,34 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { validateSession } from '@/lib/session';
+import { getSessionUser } from '@/lib/session';
 import { prisma } from '@/lib/prisma';
+import { isValidAmount, isValidPhoneNumber } from '@/lib/validation';
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const cookieStore = await import('next/headers').then(m => m.cookies());
-    const sessionId = cookieStore.get("sessionId")?.value;
-
-    if (!sessionId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { valid, userId } = await validateSession(sessionId);
-    
-    if (!valid || !userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const organizationId = (await prisma.organizationMember.findFirst({
-      where: { userId },
-      select: { organizationId: true },
-    }))?.organizationId;
+    const user = await getSessionUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!user.organizationId) return NextResponse.json({ error: 'Organization not found' }, { status: 403 });
 
     const employees = await prisma.employee.findMany({
-      where: {
-        organizationId,
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
+      where: { organizationId: user.organizationId },
+      orderBy: { createdAt: 'desc' }
     });
 
     return NextResponse.json(employees);
@@ -40,53 +23,40 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const cookieStore = await import('next/headers').then(m => m.cookies());
-    const sessionId = cookieStore.get("sessionId")?.value;
-
-    if (!sessionId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { valid, userId } = await validateSession(sessionId);
-    
-    if (!valid || !userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const user = await getSessionUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!user.organizationId) return NextResponse.json({ error: 'Organization not found' }, { status: 403 });
 
     const body = await request.json();
     const { name, email, phone, donation } = body;
 
-    // Validate required fields
-    if (!name || !email) {
+    if (typeof name !== 'string' || !name.trim() || typeof email !== 'string' || !email.trim()) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+    if (!isValidPhoneNumber(phone)) {
+      return NextResponse.json({ error: 'Phone number must contain exactly 10 digits' }, { status: 400 });
+    }
+    const donationAmount = donation === undefined || donation === null || donation === '' ? 0 : donation;
+    if (!isValidAmount(donationAmount)) {
+      return NextResponse.json({ error: 'Donation must be a non-negative amount with up to 2 decimal places' }, { status: 400 });
+    }
 
-    // Check if employee with this email already exists
     const existingEmployee = await prisma.employee.findFirst({
-      where: { email }
+      where: { email: email.trim(), organizationId: user.organizationId }
     });
 
     if (existingEmployee) {
       return NextResponse.json({ error: 'Employee with this email already exists' }, { status: 400 });
     }
 
-    const organizationId = (await prisma.organizationMember.findFirst({
-      where: { userId },
-      select: { organizationId: true },
-    }))?.organizationId;
-
-    if (!organizationId) {
-      return NextResponse.json({ error: 'Organization not found' }, { status: 400 });
-    }
-
     const employee = await prisma.employee.create({
       data: {
-        name,
-        email,
-        phone,
-        donation: donation || 0,
-        organizationId,
-        userId
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone || null,
+        donation: Number(donationAmount),
+        organizationId: user.organizationId,
+        userId: user.id
       }
     });
 
